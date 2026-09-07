@@ -1,1 +1,23 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin Login</title><link rel="stylesheet" href="/css/style.css"></head><body class="auth-page"><div class="auth-card"><h1>Admin Login</h1><p>Authorized administrators only.</p><form method="post" action="/admin/login"><label>Username</label><input name="username" required><label>Password</label><input type="password" name="password" required><button class="btn primary full" type="submit">Login</button></form><a class="text-link" href="/">← Back to website</a></div></body></html>
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="auth-page">
+<div class="auth-card">
+    <h1>Admin Login</h1>
+    <p>Authorized administrators only.</p>
+    <form method="post" th:action="@{/admin/login}">
+        <label>Username</label>
+        <input name="username" required>
+        <label>Password</label>
+        <input type="password" name="password" required>
+        <button class="btn primary full" type="submit">Login</button>
+    </form>
+    <a class="text-link" href="/">← Back to website</a>
+</div>
+</body>
+</html>
