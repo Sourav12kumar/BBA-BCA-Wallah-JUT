@@ -10,12 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface AcademicResourceRepository extends JpaRepository<AcademicResource, Long> {
-    List<AcademicResource> findByActiveTrueOrderByCreatedAtDesc();
-    List<AcademicResource> findByCourseAndSemesterAndTypeAndActiveTrueOrderByCreatedAtDesc(Course course, Integer semester, ResourceType type);
-    List<AcademicResource> findByCourseAndSemesterAndActiveTrueOrderByCreatedAtDesc(Course course, Integer semester);
-    List<AcademicResource> findBySubjectIdAndActiveTrueOrderByCreatedAtDesc(Long subjectId);
-    List<AcademicResource> findBySubjectIdAndTypeAndActiveTrueOrderByCreatedAtDesc(Long subjectId, ResourceType type);
-    List<AcademicResource> findByTitleContainingIgnoreCaseAndActiveTrueOrderByCreatedAtDesc(String keyword);
+    List<AcademicResource> findByActiveTrueOrderByFeaturedDescCreatedAtDesc();
+    List<AcademicResource> findByCourseAndSemesterAndTypeAndActiveTrueOrderByFeaturedDescCreatedAtDesc(Course course, Integer semester, ResourceType type);
+    List<AcademicResource> findByCourseAndSemesterAndActiveTrueOrderByFeaturedDescCreatedAtDesc(Course course, Integer semester);
+    List<AcademicResource> findBySubjectIdAndActiveTrueOrderByFeaturedDescCreatedAtDesc(Long subjectId);
+    List<AcademicResource> findBySubjectIdAndTypeAndActiveTrueOrderByFeaturedDescCreatedAtDesc(Long subjectId, ResourceType type);
+    List<AcademicResource> findByTitleContainingIgnoreCaseAndActiveTrueOrderByFeaturedDescCreatedAtDesc(String keyword);
+    List<AcademicResource> findTop6ByFeaturedTrueAndActiveTrueOrderByCreatedAtDesc();
     List<AcademicResource> findTop6ByActiveTrueAndFileUrlIsNotNullOrderByDownloadCountDescCreatedAtDesc();
 
     @Modifying
