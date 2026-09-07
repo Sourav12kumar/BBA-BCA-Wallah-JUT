@@ -34,6 +34,8 @@ public class AdminController {
         model.addAttribute("resourceCount", resourceRepository.count());
         model.addAttribute("noticeCount", noticeRepository.count());
         model.addAttribute("subjectCount", subjectRepository.count());
+        model.addAttribute("totalDownloads", resourceRepository.getTotalDownloads());
+        model.addAttribute("popularResources", resourceRepository.findTop6ByActiveTrueAndFileUrlIsNotNullOrderByDownloadCountDescCreatedAtDesc());
         model.addAttribute("resources", resourceRepository.findAll());
         model.addAttribute("notices", noticeRepository.findAll());
         model.addAttribute("subjects", subjectRepository.findAll());
@@ -77,11 +79,15 @@ public class AdminController {
                                @RequestParam(name = "file", required = false) MultipartFile file,
                                Model model) {
         try {
-            String previousUrl = null;
+            AcademicResource existing = null;
             if (resource.getId() != null) {
-                previousUrl = resourceRepository.findById(resource.getId())
-                        .map(AcademicResource::getFileUrl)
-                        .orElse(null);
+                existing = resourceRepository.findById(resource.getId()).orElse(null);
+            }
+
+            String previousUrl = existing != null ? existing.getFileUrl() : null;
+            if (existing != null) {
+                resource.setDownloadCount(existing.getDownloadCount());
+                resource.setCreatedAt(existing.getCreatedAt());
             }
 
             if (file != null && !file.isEmpty()) {
