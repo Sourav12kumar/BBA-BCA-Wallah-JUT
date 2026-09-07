@@ -1,0 +1,49 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle + ' | BBA/BCA Wallah'}"></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+
+<section class="subject-hero">
+    <div>
+        <span class="badge" th:text="${opportunityType}"></span>
+        <h1 th:text="${pageTitle}"></h1>
+        <p th:text="${pageDescription}"></p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="cards opportunity-grid">
+        <article class="card opportunity-card" th:each="o : ${opportunities}">
+            <div class="priority-row">
+                <span class="badge small" th:text="${o.type}"></span>
+                <span class="priority-badge" th:if="${o.featured}">FEATURED</span>
+            </div>
+            <h3 th:text="${o.role}"></h3>
+            <p class="company-name" th:text="${o.company}"></p>
+            <div class="opportunity-meta">
+                <span th:if="${o.location != null and !o.location.isBlank()}" th:text="${'📍 ' + o.location}"></span>
+                <span th:if="${o.batch != null and !o.batch.isBlank()}" th:text="${'Batch: ' + o.batch}"></span>
+                <span th:if="${o.eligibleCourses != null and !o.eligibleCourses.isBlank()}" th:text="${'Courses: ' + o.eligibleCourses}"></span>
+                <span th:if="${o.deadline != null}" th:text="${'Deadline: ' + o.deadline}"></span>
+            </div>
+            <p th:if="${o.eligibility != null and !o.eligibility.isBlank()}" th:text="${o.eligibility}"></p>
+            <p th:if="${o.description != null and !o.description.isBlank()}" th:text="${o.description}"></p>
+            <a class="btn primary" th:if="${o.applyUrl != null and !o.applyUrl.isBlank()}" th:href="${o.applyUrl}" target="_blank" rel="noopener">Apply Now</a>
+        </article>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(opportunities)}">
+        <h3>No active opportunities right now</h3>
+        <p>New opportunities will appear here when added by the administrator.</p>
+    </div>
+</section>
+
+<div th:replace="~{fragments :: footer}"></div>
+</body>
+</html>
