@@ -1,0 +1,8 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Subjects | BBA/BCA Wallah</title><link rel="stylesheet" href="/css/style.css"></head>
+<body><div th:replace="~{fragments :: header}"></div>
+<section class="section"><span class="badge" th:text="${course + ' • Semester ' + semester}"></span><h1>Choose a Subject</h1><p>Select your subject to access all available resources from one dashboard.</p>
+<div class="subject-grid"><a class="subject-card" th:each="s : ${subjects}" th:href="@{'/subject/' + ${s.id}}"><div><span class="subject-code" th:text="${s.code != null and !s.code.isBlank() ? s.code : 'SUBJECT'}"></span><h3 th:text="${s.name}"></h3><p>Notes, syllabus, PYQs, important questions, sample papers and more.</p></div><span class="subject-arrow">→</span></a></div>
+<div th:if="${#lists.isEmpty(subjects)}" class="empty-state"><h3>No subjects added yet</h3><p>The administrator can add subjects from the admin dashboard.</p></div></section>
+<div th:replace="~{fragments :: footer}"></div></body></html>
