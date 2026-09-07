@@ -36,6 +36,8 @@ Subject Dashboard
 - Notices and university updates
 - Direct file downloads
 - External resource links supported
+- Per-resource download counter
+- Most Downloaded Resources section on the homepage
 
 ## Admin Features
 
@@ -50,6 +52,19 @@ Subject Dashboard
 - 20 MB maximum file size per upload
 - Uploaded files are stored outside Git and served through `/files/{filename}`
 - Docker volume keeps uploaded resources across container restarts
+- Total download count on the dashboard
+- Download count for every resource
+- Most-downloaded resource ranking
+
+## Download Analytics Flow
+
+All student download/open actions use:
+
+```text
+/resource/{resourceId}/download
+```
+
+The application increments the resource's download counter in MySQL and then redirects the student to the locally uploaded file or external resource URL. This means both local files and Drive/OneDrive/public links are tracked consistently.
 
 ## Tech Stack
 
@@ -103,6 +118,7 @@ Open:
 5. Upload a PDF/document directly, or provide an external file URL.
 6. Save the resource.
 7. Students can open/download it from the subject dashboard without logging in.
+8. Downloads automatically appear in the admin analytics.
 
 When a new uploaded file replaces an older locally uploaded file, the previous stored file is removed automatically. Deleting a resource also removes its associated local uploaded file when applicable.
 
@@ -130,14 +146,14 @@ For production deployment, the storage service is intentionally isolated so it c
 2. Add syllabus, notes, PYQs and other resources to the correct subject.
 3. Publish notices and updates.
 4. Students navigate **Course → Semester → Subject → Resource Category**.
+5. Use download analytics to identify the resources students use most.
 
 ## Roadmap
 
 - Cloud object storage
 - Placement and internship modules
-- Download counters
-- Featured resources
-- Admin analytics
+- Featured/pinned resources
+- Date-range analytics
 - Pagination
 - SEO metadata
 - Mobile/PWA improvements
