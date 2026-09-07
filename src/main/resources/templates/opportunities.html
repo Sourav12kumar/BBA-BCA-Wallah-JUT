@@ -11,13 +11,49 @@
 
 <section class="subject-hero">
     <div>
-        <span class="badge" th:text="${opportunityType}"></span>
+        <span class="badge" th:text="${opportunityType != null ? opportunityType : 'CAREER'}"></span>
         <h1 th:text="${pageTitle}"></h1>
         <p th:text="${pageDescription}"></p>
     </div>
 </section>
 
 <section class="section">
+    <form class="career-filters" method="get" action="/opportunities">
+        <input type="search" name="q" th:value="${selectedQuery}" placeholder="Search company, role, skill...">
+
+        <select name="type">
+            <option value="">All Types</option>
+            <option th:each="t : ${types}" th:value="${t}" th:text="${t}"
+                    th:selected="${selectedType != null and selectedType == t}"></option>
+        </select>
+
+        <select name="course">
+            <option value="">All Courses</option>
+            <option th:each="c : ${courseOptions}" th:value="${c}" th:text="${c}"
+                    th:selected="${selectedCourse != null and selectedCourse == c}"></option>
+        </select>
+
+        <select name="batch">
+            <option value="">All Batches</option>
+            <option th:each="b : ${batchOptions}" th:value="${b}" th:text="${b}"
+                    th:selected="${selectedBatch != null and selectedBatch == b}"></option>
+        </select>
+
+        <select name="location">
+            <option value="">All Locations</option>
+            <option th:each="l : ${locationOptions}" th:value="${l}" th:text="${l}"
+                    th:selected="${selectedLocation != null and selectedLocation == l}"></option>
+        </select>
+
+        <button class="btn primary" type="submit">Apply Filters</button>
+        <a class="btn secondary" href="/opportunities">Clear</a>
+    </form>
+
+    <div class="filter-summary">
+        <strong th:text="${opportunities.size()}"></strong>
+        <span> matching opportunity/opportunities</span>
+    </div>
+
     <div class="cards opportunity-grid">
         <article class="card opportunity-card" th:each="o : ${opportunities}">
             <div class="priority-row">
@@ -39,8 +75,9 @@
     </div>
 
     <div class="empty-state" th:if="${#lists.isEmpty(opportunities)}">
-        <h3>No active opportunities right now</h3>
-        <p>New opportunities will appear here when added by the administrator.</p>
+        <h3>No matching opportunities</h3>
+        <p>Try changing or clearing one or more filters.</p>
+        <a class="btn secondary" href="/opportunities">Clear Filters</a>
     </div>
 </section>
 
