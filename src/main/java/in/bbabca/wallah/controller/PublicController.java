@@ -25,8 +25,10 @@ public class PublicController {
 
     @GetMapping("/")
     public String home(Model model) {
-        model.addAttribute("notices", noticeRepository.findByActiveTrueOrderByNoticeDateDescCreatedAtDesc().stream().limit(5).toList());
-        model.addAttribute("resources", resourceRepository.findByActiveTrueOrderByCreatedAtDesc().stream().limit(8).toList());
+        model.addAttribute("pinnedNotices", noticeRepository.findTop5ByPinnedTrueAndActiveTrueOrderByNoticeDateDescCreatedAtDesc());
+        model.addAttribute("notices", noticeRepository.findByActiveTrueOrderByPinnedDescNoticeDateDescCreatedAtDesc().stream().limit(5).toList());
+        model.addAttribute("featuredResources", resourceRepository.findTop6ByFeaturedTrueAndActiveTrueOrderByCreatedAtDesc());
+        model.addAttribute("resources", resourceRepository.findByActiveTrueOrderByFeaturedDescCreatedAtDesc().stream().limit(8).toList());
         model.addAttribute("popularResources", resourceRepository.findTop6ByActiveTrueAndFileUrlIsNotNullOrderByDownloadCountDescCreatedAtDesc());
         return "index";
     }
@@ -56,7 +58,7 @@ public class PublicController {
         Subject subject = subjectRepository.findById(id).orElseThrow();
         Map<ResourceType, java.util.List<AcademicResource>> grouped = new LinkedHashMap<>();
         for (ResourceType type : ResourceType.values()) {
-            var items = resourceRepository.findBySubjectIdAndTypeAndActiveTrueOrderByCreatedAtDesc(id, type);
+            var items = resourceRepository.findBySubjectIdAndTypeAndActiveTrueOrderByFeaturedDescCreatedAtDesc(id, type);
             if (!items.isEmpty()) grouped.put(type, items);
         }
         model.addAttribute("subject", subject);
@@ -70,13 +72,13 @@ public class PublicController {
                             @RequestParam(required=false) ResourceType type,
                             @RequestParam(required=false) String q,
                             Model model) {
-        var results = resourceRepository.findByActiveTrueOrderByCreatedAtDesc();
+        var results = resourceRepository.findByActiveTrueOrderByFeaturedDescCreatedAtDesc();
         if (q != null && !q.isBlank()) {
-            results = resourceRepository.findByTitleContainingIgnoreCaseAndActiveTrueOrderByCreatedAtDesc(q);
+            results = resourceRepository.findByTitleContainingIgnoreCaseAndActiveTrueOrderByFeaturedDescCreatedAtDesc(q);
         } else if (course != null && semester != null && type != null) {
-            results = resourceRepository.findByCourseAndSemesterAndTypeAndActiveTrueOrderByCreatedAtDesc(course, semester, type);
+            results = resourceRepository.findByCourseAndSemesterAndTypeAndActiveTrueOrderByFeaturedDescCreatedAtDesc(course, semester, type);
         } else if (course != null && semester != null) {
-            results = resourceRepository.findByCourseAndSemesterAndActiveTrueOrderByCreatedAtDesc(course, semester);
+            results = resourceRepository.findByCourseAndSemesterAndActiveTrueOrderByFeaturedDescCreatedAtDesc(course, semester);
         }
         model.addAttribute("resources", results);
         model.addAttribute("courses", Course.values());
@@ -86,7 +88,7 @@ public class PublicController {
 
     @GetMapping("/notices")
     public String notices(Model model) {
-        model.addAttribute("notices", noticeRepository.findByActiveTrueOrderByNoticeDateDescCreatedAtDesc());
+        model.addAttribute("notices", noticeRepository.findByActiveTrueOrderByPinnedDescNoticeDateDescCreatedAtDesc());
         return "notices";
     }
 
