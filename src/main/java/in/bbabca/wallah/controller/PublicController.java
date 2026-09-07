@@ -14,13 +14,16 @@ public class PublicController {
     private final AcademicResourceRepository resourceRepository;
     private final NoticeRepository noticeRepository;
     private final SubjectRepository subjectRepository;
+    private final OpportunityRepository opportunityRepository;
 
     public PublicController(AcademicResourceRepository resourceRepository,
                             NoticeRepository noticeRepository,
-                            SubjectRepository subjectRepository) {
+                            SubjectRepository subjectRepository,
+                            OpportunityRepository opportunityRepository) {
         this.resourceRepository = resourceRepository;
         this.noticeRepository = noticeRepository;
         this.subjectRepository = subjectRepository;
+        this.opportunityRepository = opportunityRepository;
     }
 
     @GetMapping("/")
@@ -30,7 +33,26 @@ public class PublicController {
         model.addAttribute("featuredResources", resourceRepository.findTop6ByFeaturedTrueAndActiveTrueOrderByCreatedAtDesc());
         model.addAttribute("resources", resourceRepository.findByActiveTrueOrderByFeaturedDescCreatedAtDesc().stream().limit(8).toList());
         model.addAttribute("popularResources", resourceRepository.findTop6ByActiveTrueAndFileUrlIsNotNullOrderByDownloadCountDescCreatedAtDesc());
+        model.addAttribute("opportunities", opportunityRepository.findTop6ByActiveTrueOrderByFeaturedDescCreatedAtDesc());
         return "index";
+    }
+
+    @GetMapping("/placements")
+    public String placements(Model model) {
+        model.addAttribute("pageTitle", "Placement Opportunities");
+        model.addAttribute("pageDescription", "Latest placement and job opportunities for BBA and BCA students.");
+        model.addAttribute("opportunities", opportunityRepository.findByTypeAndActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc(OpportunityType.PLACEMENT));
+        model.addAttribute("opportunityType", OpportunityType.PLACEMENT);
+        return "opportunities";
+    }
+
+    @GetMapping("/internships")
+    public String internships(Model model) {
+        model.addAttribute("pageTitle", "Internship Opportunities");
+        model.addAttribute("pageDescription", "Internship opportunities, training programs and student hiring updates for BBA and BCA students.");
+        model.addAttribute("opportunities", opportunityRepository.findByTypeAndActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc(OpportunityType.INTERNSHIP));
+        model.addAttribute("opportunityType", OpportunityType.INTERNSHIP);
+        return "opportunities";
     }
 
     @GetMapping("/resource/{id}/download")
