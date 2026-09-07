@@ -6,7 +6,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Controller
@@ -38,21 +41,111 @@ public class PublicController {
     }
 
     @GetMapping("/placements")
-    public String placements(Model model) {
-        model.addAttribute("pageTitle", "Placement Opportunities");
-        model.addAttribute("pageDescription", "Latest placement and job opportunities for BBA and BCA students.");
-        model.addAttribute("opportunities", opportunityRepository.findByTypeAndActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc(OpportunityType.PLACEMENT));
-        model.addAttribute("opportunityType", OpportunityType.PLACEMENT);
-        return "opportunities";
+    public String placements(@RequestParam(required = false) String course,
+                             @RequestParam(required = false) String batch,
+                             @RequestParam(required = false) String location,
+                             @RequestParam(required = false) String q,
+                             Model model) {
+        return opportunityPage(OpportunityType.PLACEMENT, course, batch, location, q, model,
+                "Placement Opportunities",
+                "Latest placement and job opportunities for BBA and BCA students.");
     }
 
     @GetMapping("/internships")
-    public String internships(Model model) {
-        model.addAttribute("pageTitle", "Internship Opportunities");
-        model.addAttribute("pageDescription", "Internship opportunities, training programs and student hiring updates for BBA and BCA students.");
-        model.addAttribute("opportunities", opportunityRepository.findByTypeAndActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc(OpportunityType.INTERNSHIP));
-        model.addAttribute("opportunityType", OpportunityType.INTERNSHIP);
+    public String internships(@RequestParam(required = false) String course,
+                              @RequestParam(required = false) String batch,
+                              @RequestParam(required = false) String location,
+                              @RequestParam(required = false) String q,
+                              Model model) {
+        return opportunityPage(OpportunityType.INTERNSHIP, course, batch, location, q, model,
+                "Internship Opportunities",
+                "Internship opportunities, training programs and student hiring updates for BBA and BCA students.");
+    }
+
+    @GetMapping("/opportunities")
+    public String opportunities(@RequestParam(required = false) OpportunityType type,
+                                @RequestParam(required = false) String course,
+                                @RequestParam(required = false) String batch,
+                                @RequestParam(required = false) String location,
+                                @RequestParam(required = false) String q,
+                                Model model) {
+        return opportunityPage(type, course, batch, location, q, model,
+                type == null ? "Career Opportunities" : (type == OpportunityType.PLACEMENT ? "Placement Opportunities" : "Internship Opportunities"),
+                "Filter placement and internship opportunities by course, batch, location and keyword.");
+    }
+
+    private String opportunityPage(OpportunityType type,
+                                   String course,
+                                   String batch,
+                                   String location,
+                                   String q,
+                                   Model model,
+                                   String pageTitle,
+                                   String pageDescription) {
+        List<Opportunity> all = type == null
+                ? opportunityRepository.findByActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc()
+                : opportunityRepository.findByTypeAndActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc(type);
+
+        String courseNeedle = normalize(course);
+        String batchNeedle = normalize(batch);
+        String locationNeedle = normalize(location);
+        String keyword = normalize(q);
+
+        List<Opportunity> filtered = all.stream()
+                .filter(o -> courseNeedle.isBlank() || contains(o.getEligibleCourses(), courseNeedle))
+                .filter(o -> batchNeedle.isBlank() || contains(o.getBatch(), batchNeedle))
+                .filter(o -> locationNeedle.isBlank() || contains(o.getLocation(), locationNeedle))
+                .filter(o -> keyword.isBlank()
+                        || contains(o.getCompany(), keyword)
+                        || contains(o.getRole(), keyword)
+                        || contains(o.getDescription(), keyword)
+                        || contains(o.getEligibility(), keyword))
+                .sorted(Comparator.comparing(Opportunity::isFeatured).reversed()
+                        .thenComparing(Opportunity::getDeadline, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(Opportunity::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+
+        List<String> courses = opportunityRepository.findByActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc().stream()
+                .flatMap(o -> splitValues(o.getEligibleCourses()).stream())
+                .distinct().sorted().toList();
+        List<String> batches = opportunityRepository.findByActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc().stream()
+                .flatMap(o -> splitValues(o.getBatch()).stream())
+                .distinct().sorted().toList();
+        List<String> locations = opportunityRepository.findByActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc().stream()
+                .map(Opportunity::getLocation)
+                .filter(v -> v != null && !v.isBlank())
+                .distinct().sorted().toList();
+
+        model.addAttribute("pageTitle", pageTitle);
+        model.addAttribute("pageDescription", pageDescription);
+        model.addAttribute("opportunities", filtered);
+        model.addAttribute("opportunityType", type);
+        model.addAttribute("types", OpportunityType.values());
+        model.addAttribute("courseOptions", courses);
+        model.addAttribute("batchOptions", batches);
+        model.addAttribute("locationOptions", locations);
+        model.addAttribute("selectedCourse", course);
+        model.addAttribute("selectedBatch", batch);
+        model.addAttribute("selectedLocation", location);
+        model.addAttribute("selectedQuery", q);
+        model.addAttribute("selectedType", type);
         return "opportunities";
+    }
+
+    private static boolean contains(String value, String needle) {
+        return value != null && value.toLowerCase(Locale.ROOT).contains(needle);
+    }
+
+    private static String normalize(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static List<String> splitValues(String value) {
+        if (value == null || value.isBlank()) return List.of();
+        return java.util.Arrays.stream(value.split("[,/|]"))
+                .map(String::trim)
+                .filter(v -> !v.isBlank())
+                .toList();
     }
 
     @GetMapping("/resource/{id}/download")
