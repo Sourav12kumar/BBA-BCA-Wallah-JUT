@@ -14,15 +14,18 @@ public class AdminController {
     private final AcademicResourceRepository resourceRepository;
     private final NoticeRepository noticeRepository;
     private final SubjectRepository subjectRepository;
+    private final OpportunityRepository opportunityRepository;
     private final FileStorageService fileStorageService;
 
     public AdminController(AcademicResourceRepository resourceRepository,
                            NoticeRepository noticeRepository,
                            SubjectRepository subjectRepository,
+                           OpportunityRepository opportunityRepository,
                            FileStorageService fileStorageService) {
         this.resourceRepository = resourceRepository;
         this.noticeRepository = noticeRepository;
         this.subjectRepository = subjectRepository;
+        this.opportunityRepository = opportunityRepository;
         this.fileStorageService = fileStorageService;
     }
 
@@ -34,12 +37,45 @@ public class AdminController {
         model.addAttribute("resourceCount", resourceRepository.count());
         model.addAttribute("noticeCount", noticeRepository.count());
         model.addAttribute("subjectCount", subjectRepository.count());
+        model.addAttribute("placementCount", opportunityRepository.countByType(OpportunityType.PLACEMENT));
+        model.addAttribute("internshipCount", opportunityRepository.countByType(OpportunityType.INTERNSHIP));
         model.addAttribute("totalDownloads", resourceRepository.getTotalDownloads());
         model.addAttribute("popularResources", resourceRepository.findTop6ByActiveTrueAndFileUrlIsNotNullOrderByDownloadCountDescCreatedAtDesc());
         model.addAttribute("resources", resourceRepository.findAll());
         model.addAttribute("notices", noticeRepository.findAll());
         model.addAttribute("subjects", subjectRepository.findAll());
+        model.addAttribute("opportunities", opportunityRepository.findAll());
         return "admin/dashboard";
+    }
+
+    @GetMapping("/opportunities/new")
+    public String newOpportunity(Model model) {
+        model.addAttribute("opportunity", new Opportunity());
+        model.addAttribute("opportunityTypes", OpportunityType.values());
+        return "admin/opportunity-form";
+    }
+
+    @PostMapping("/opportunities")
+    public String saveOpportunity(@ModelAttribute Opportunity opportunity) {
+        if (opportunity.getId() != null) {
+            opportunityRepository.findById(opportunity.getId())
+                    .ifPresent(existing -> opportunity.setCreatedAt(existing.getCreatedAt()));
+        }
+        opportunityRepository.save(opportunity);
+        return "redirect:/admin";
+    }
+
+    @GetMapping("/opportunities/{id}/edit")
+    public String editOpportunity(@PathVariable Long id, Model model) {
+        model.addAttribute("opportunity", opportunityRepository.findById(id).orElseThrow());
+        model.addAttribute("opportunityTypes", OpportunityType.values());
+        return "admin/opportunity-form";
+    }
+
+    @PostMapping("/opportunities/{id}/delete")
+    public String deleteOpportunity(@PathVariable Long id) {
+        opportunityRepository.deleteById(id);
+        return "redirect:/admin";
     }
 
     @GetMapping("/subjects/new")
@@ -132,6 +168,10 @@ public class AdminController {
 
     @PostMapping("/notices")
     public String saveNotice(@ModelAttribute Notice notice) {
+        if (notice.getId() != null) {
+            noticeRepository.findById(notice.getId())
+                    .ifPresent(existing -> notice.setCreatedAt(existing.getCreatedAt()));
+        }
         noticeRepository.save(notice);
         return "redirect:/admin";
     }
