@@ -1,0 +1,22 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>BBA/BCA Wallah — JUT</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<section class="hero"><div>
+<span class="badge">For JUT BBA & BCA Students</span>
+<h1>Everything you need for your semester, in one place.</h1>
+<p>Syllabus, PYQs, sample questions, notes, e-books, important questions, notices, internships and placement updates.</p>
+<div class="hero-actions"><a class="btn primary" href="#course-semester">Choose Course & Semester</a><a class="btn secondary" href="/notices">Latest Notices</a></div>
+</div></section>
+<section class="section" id="course-semester">
+<h2>Choose Course & Semester</h2>
+<div class="program-block"><h3>BCA</h3><div class="semester-grid"><a class="semester-card" th:each="s : ${#numbers.sequence(1,6)}" th:href="@{/subjects(course='BCA',semester=${s})}"><span th:text="${'Semester ' + s}"></span><strong>View Subjects →</strong></a></div></div>
+<div class="program-block"><h3>BBA</h3><div class="semester-grid"><a class="semester-card" th:each="s : ${#numbers.sequence(1,6)}" th:href="@{/subjects(course='BBA',semester=${s})}"><span th:text="${'Semester ' + s}"></span><strong>View Subjects →</strong></a></div></div>
+</section>
+<section class="section"><h2>Latest Resources</h2><div class="cards">
+<article class="card" th:each="r : ${resources}"><span class="badge small" th:text="${r.type}"></span><h3 th:text="${r.title}"></h3><p th:text="${r.course + ' • Semester ' + r.semester}"></p><p th:if="${r.subject != null}" th:text="${'Subject: ' + r.subject.name}"></p><p th:text="${r.description}"></p><a class="text-link" th:if="${r.fileUrl != null and !r.fileUrl.isBlank()}" th:href="${r.fileUrl}" target="_blank">Open / Download →</a></article>
+</div></section>
+<section class="section alt"><h2>Recent Notices</h2><div class="notice-list"><article class="notice" th:each="n : ${notices}"><div><span class="badge small" th:text="${n.category != null ? n.category : 'Notice'}"></span><h3 th:text="${n.title}"></h3><p th:text="${n.content}"></p></div><span th:text="${n.noticeDate}"></span></article></div></section>
+<div th:replace="~{fragments :: footer}"></div>
+</body></html>
