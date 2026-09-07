@@ -27,63 +27,79 @@ Subject Dashboard
 - BBA/BCA selection
 - Semester 1–6 navigation
 - Subject-wise dashboard
-- Syllabus
-- Previous Year Questions (PYQs)
-- Sample/model questions
-- Notes and e-books
-- Important questions
+- Syllabus, PYQs, notes, e-books and important questions
 - Search and filters
 - Notices and university updates
-- Direct file downloads
-- External resource links supported
+- Direct file downloads and external resource links
 - Per-resource download counter
 - Most Downloaded Resources section
 - Featured Resources section
 - Pinned Important Notices section
-- Featured resources automatically appear first in resource lists
-- Pinned notices automatically appear first in notice lists
+- Dedicated **Placements** page
+- Dedicated **Internships** page
+- Placement/internship cards with company, role, location, eligible batch, eligible courses, eligibility, deadline and apply link
+- Featured opportunities automatically appear first
+- Latest placements and internships highlighted on the homepage
 
 ## Admin Features
 
 - Protected admin login
-- Add/edit/delete subjects
-- Add/edit/delete notices
-- Add/edit/delete academic resources
-- Assign each resource to course, semester and subject
-- Upload files directly from the admin panel
-- Optional external Google Drive / OneDrive / public URL fallback
-- Supported uploads: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX and TXT
+- Add/edit/delete subjects, notices and academic resources
+- Upload PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX and TXT files
 - 20 MB maximum file size per upload
-- Uploaded files are stored outside Git and served through `/files/{filename}`
-- Docker volume keeps uploaded resources across container restarts
-- Mark any academic resource as **Featured**
-- Pin/unpin important notices from the notice form
-- Total download count on the dashboard
-- Download count for every resource
-- Most-downloaded resource ranking
-- Featured/Pinned status visible in admin tables
+- Optional Google Drive / OneDrive / public URL fallback
+- Mark academic resources as Featured
+- Pin important notices
+- Download analytics and most-downloaded ranking
+- Add/edit/delete **Placement and Internship opportunities**
+- Opportunity type: Placement or Internship
+- Manage company/organization, role, location, eligible batch, courses, eligibility, deadline, application URL and description
+- Mark important career opportunities as Featured
+- Placement and internship counts on admin dashboard
+
+## Placement & Internship Module
+
+The admin can create a structured opportunity instead of using a normal notice.
+
+### Placement fields
+
+```text
+Type: Placement
+Company / Organization
+Role / Position
+Location
+Eligible Batch
+Eligible Courses
+Eligibility
+Application Deadline
+Apply Link
+Description
+Featured
+Active
+```
+
+### Internship fields
+
+The same structured fields are available with `Type = Internship`.
+
+Students can browse:
+
+```text
+/placements
+/internships
+```
+
+Featured opportunities are shown first, and the homepage displays the latest active career opportunities.
 
 ## Priority Content Flow
 
 ### Featured Resources
 
-An administrator can mark a resource as **Featured** from the resource form. Featured resources:
-
-- appear in a dedicated homepage section,
-- appear before normal resources in resource lists,
-- appear first inside subject resource categories,
-- display a FEATURED badge to students.
+Featured resources appear in a dedicated homepage section, before normal resource results, and at the top of subject categories.
 
 ### Pinned Notices
 
-An administrator can mark a notice as **Pinned**. Pinned notices:
-
-- appear in the Important Notices homepage section,
-- appear before normal notices,
-- display a PINNED badge,
-- remain visually highlighted on the notices page.
-
-This is useful for exam dates, admit-card updates, registration deadlines, result notices and urgent JUT announcements.
+Pinned notices appear in the Important Notices homepage section and before regular notices.
 
 ## Download Analytics Flow
 
@@ -93,7 +109,7 @@ All student download/open actions use:
 /resource/{resourceId}/download
 ```
 
-The application increments the resource's download counter in MySQL and then redirects the student to the locally uploaded file or external resource URL. This means both local files and Drive/OneDrive/public links are tracked consistently.
+The application increments the resource's download counter in MySQL and then redirects the student to the local file or external resource URL.
 
 ## Tech Stack
 
@@ -109,15 +125,7 @@ The application increments the resource's download counter in MySQL and then red
 
 ## Environment Setup
 
-Copy the sample environment file:
-
-```bash
-cp .env.example .env
-```
-
-On Windows PowerShell you can instead create `.env` manually from `.env.example`.
-
-Set strong values for:
+Copy `.env.example` to `.env` and set strong values for:
 
 ```text
 MYSQL_ROOT_PASSWORD
@@ -140,17 +148,18 @@ Open:
 
 ## Recommended Admin Workflow
 
-1. Add all BBA/BCA subjects semester-wise.
-2. Add syllabus, notes, PYQs and other resources to the correct subject.
-3. Mark high-value material as **Featured** when needed.
-4. Publish notices and pin urgent updates.
-5. Students navigate **Course → Semester → Subject → Resource Category**.
-6. Use download analytics to identify the resources students use most.
+1. Add BBA/BCA subjects semester-wise.
+2. Add syllabus, notes, PYQs and other academic resources.
+3. Feature high-value resources.
+4. Publish and pin urgent notices.
+5. Add current placement and internship opportunities.
+6. Feature important career opportunities.
+7. Review download analytics to identify popular material.
 
 ## Roadmap
 
 - Cloud object storage
-- Placement and internship modules
+- Opportunity filtering by course/batch/location
 - Date-range analytics
 - Pagination
 - SEO metadata
