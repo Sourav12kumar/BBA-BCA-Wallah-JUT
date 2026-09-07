@@ -14,13 +14,20 @@ import java.time.LocalDateTime;
 public class Notice {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(nullable = false)
     private String title;
+
     @Column(length = 3000)
     private String content;
+
     private String category;
     private String externalUrl;
     private LocalDate noticeDate = LocalDate.now();
+
+    @Column(nullable = false)
+    private boolean pinned = false;
+
     private boolean active = true;
     private LocalDateTime createdAt = LocalDateTime.now();
 }
