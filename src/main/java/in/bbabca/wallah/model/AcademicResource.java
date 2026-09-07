@@ -39,6 +39,9 @@ public class AcademicResource {
     @Column(nullable = false)
     private long downloadCount = 0L;
 
+    @Column(nullable = false)
+    private boolean featured = false;
+
     private boolean active = true;
     private LocalDateTime createdAt = LocalDateTime.now();
 }
