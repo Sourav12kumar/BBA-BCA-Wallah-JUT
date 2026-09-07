@@ -1,0 +1,56 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opportunity Form</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<section class="section narrow">
+    <a class="text-link" href="/admin">← Dashboard</a>
+    <h1>Add / Edit Placement or Internship</h1>
+
+    <form class="admin-form" th:object="${opportunity}" method="post" action="/admin/opportunities">
+        <input type="hidden" th:field="*{id}">
+
+        <label>Type</label>
+        <select th:field="*{type}" required>
+            <option th:each="t : ${opportunityTypes}" th:value="${t}" th:text="${t}"></option>
+        </select>
+
+        <label>Company / Organization</label>
+        <input th:field="*{company}" required placeholder="Example: TCS">
+
+        <label>Role / Position</label>
+        <input th:field="*{role}" required placeholder="Example: Graduate Trainee">
+
+        <label>Location</label>
+        <input th:field="*{location}" placeholder="Ranchi / Bengaluru / Remote">
+
+        <label>Eligible Batch</label>
+        <input th:field="*{batch}" placeholder="Example: 2026 / 2027">
+
+        <label>Eligible Courses</label>
+        <input th:field="*{eligibleCourses}" placeholder="BBA, BCA or both">
+
+        <label>Eligibility</label>
+        <textarea th:field="*{eligibility}" rows="4" placeholder="CGPA, skills, semester, passout year, etc."></textarea>
+
+        <label>Application Deadline</label>
+        <input type="date" th:field="*{deadline}">
+
+        <label>Apply Link</label>
+        <input th:field="*{applyUrl}" placeholder="Official application URL">
+
+        <label>Description</label>
+        <textarea th:field="*{description}" rows="6"></textarea>
+
+        <label class="check"><input type="checkbox" th:field="*{featured}"> Featured opportunity</label>
+        <label class="check"><input type="checkbox" th:field="*{active}"> Active</label>
+
+        <button class="btn primary" type="submit">Save Opportunity</button>
+    </form>
+</section>
+</body>
+</html>
