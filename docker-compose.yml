@@ -1,0 +1,26 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: bba_bca_wallah
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  app:
+    build: .
+    depends_on:
+      - mysql
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/bba_bca_wallah?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
