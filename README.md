@@ -37,7 +37,11 @@ Subject Dashboard
 - Direct file downloads
 - External resource links supported
 - Per-resource download counter
-- Most Downloaded Resources section on the homepage
+- Most Downloaded Resources section
+- Featured Resources section
+- Pinned Important Notices section
+- Featured resources automatically appear first in resource lists
+- Pinned notices automatically appear first in notice lists
 
 ## Admin Features
 
@@ -52,9 +56,34 @@ Subject Dashboard
 - 20 MB maximum file size per upload
 - Uploaded files are stored outside Git and served through `/files/{filename}`
 - Docker volume keeps uploaded resources across container restarts
+- Mark any academic resource as **Featured**
+- Pin/unpin important notices from the notice form
 - Total download count on the dashboard
 - Download count for every resource
 - Most-downloaded resource ranking
+- Featured/Pinned status visible in admin tables
+
+## Priority Content Flow
+
+### Featured Resources
+
+An administrator can mark a resource as **Featured** from the resource form. Featured resources:
+
+- appear in a dedicated homepage section,
+- appear before normal resources in resource lists,
+- appear first inside subject resource categories,
+- display a FEATURED badge to students.
+
+### Pinned Notices
+
+An administrator can mark a notice as **Pinned**. Pinned notices:
+
+- appear in the Important Notices homepage section,
+- appear before normal notices,
+- display a PINNED badge,
+- remain visually highlighted on the notices page.
+
+This is useful for exam dates, admit-card updates, registration deadlines, result notices and urgent JUT announcements.
 
 ## Download Analytics Flow
 
@@ -109,50 +138,19 @@ Open:
 - Student website: http://localhost:8080
 - Admin panel: http://localhost:8080/admin
 
-## Admin Resource Upload Flow
-
-1. Log in to `/admin`.
-2. Add the required subject first.
-3. Click **Add Resource**.
-4. Choose course, semester, subject and resource type.
-5. Upload a PDF/document directly, or provide an external file URL.
-6. Save the resource.
-7. Students can open/download it from the subject dashboard without logging in.
-8. Downloads automatically appear in the admin analytics.
-
-When a new uploaded file replaces an older locally uploaded file, the previous stored file is removed automatically. Deleting a resource also removes its associated local uploaded file when applicable.
-
-## Local Storage Design
-
-By default, uploaded files are stored in:
-
-```text
-uploads/
-```
-
-The path can be changed with:
-
-```text
-UPLOAD_DIR
-```
-
-In Docker, files are persisted using the `resource_uploads` volume mounted at `/app/uploads`.
-
-For production deployment, the storage service is intentionally isolated so it can later be replaced with S3, Cloudinary or another object-storage provider.
-
 ## Recommended Admin Workflow
 
 1. Add all BBA/BCA subjects semester-wise.
 2. Add syllabus, notes, PYQs and other resources to the correct subject.
-3. Publish notices and updates.
-4. Students navigate **Course → Semester → Subject → Resource Category**.
-5. Use download analytics to identify the resources students use most.
+3. Mark high-value material as **Featured** when needed.
+4. Publish notices and pin urgent updates.
+5. Students navigate **Course → Semester → Subject → Resource Category**.
+6. Use download analytics to identify the resources students use most.
 
 ## Roadmap
 
 - Cloud object storage
 - Placement and internship modules
-- Featured/pinned resources
 - Date-range analytics
 - Pagination
 - SEO metadata
