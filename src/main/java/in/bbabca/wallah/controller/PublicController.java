@@ -27,7 +27,18 @@ public class PublicController {
     public String home(Model model) {
         model.addAttribute("notices", noticeRepository.findByActiveTrueOrderByNoticeDateDescCreatedAtDesc().stream().limit(5).toList());
         model.addAttribute("resources", resourceRepository.findByActiveTrueOrderByCreatedAtDesc().stream().limit(8).toList());
+        model.addAttribute("popularResources", resourceRepository.findTop6ByActiveTrueAndFileUrlIsNotNullOrderByDownloadCountDescCreatedAtDesc());
         return "index";
+    }
+
+    @GetMapping("/resource/{id}/download")
+    public String downloadResource(@PathVariable Long id) {
+        AcademicResource resource = resourceRepository.findById(id).orElseThrow();
+        if (!resource.isActive() || resource.getFileUrl() == null || resource.getFileUrl().isBlank()) {
+            return "redirect:/resources";
+        }
+        resourceRepository.incrementDownloadCount(id);
+        return "redirect:" + resource.getFileUrl();
     }
 
     @GetMapping("/subjects")
