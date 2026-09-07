@@ -1,1 +1,0 @@
-Write access test for BBA-BCA-Wallah-JUT.
