@@ -7,9 +7,16 @@
 <div class="stat"><strong th:text="${subjectCount}"></strong><span>Subjects</span></div>
 <div class="stat"><strong th:text="${resourceCount}"></strong><span>Resources</span></div>
 <div class="stat"><strong th:text="${noticeCount}"></strong><span>Notices</span></div>
+<div class="stat"><strong th:text="${placementCount}"></strong><span>Placements</span></div>
+<div class="stat"><strong th:text="${internshipCount}"></strong><span>Internships</span></div>
 <div class="stat"><strong th:text="${totalDownloads}"></strong><span>Total Downloads</span></div>
 </div>
-<div class="admin-actions"><a class="btn primary" href="/admin/subjects/new">+ Add Subject</a><a class="btn primary" href="/admin/resources/new">+ Add Resource</a><a class="btn primary" href="/admin/notices/new">+ Add Notice</a></div>
+<div class="admin-actions"><a class="btn primary" href="/admin/subjects/new">+ Add Subject</a><a class="btn primary" href="/admin/resources/new">+ Add Resource</a><a class="btn primary" href="/admin/notices/new">+ Add Notice</a><a class="btn primary" href="/admin/opportunities/new">+ Add Placement / Internship</a></div>
+
+<h2>Manage Placements & Internships</h2>
+<div class="table-wrap"><table><thead><tr><th>Type</th><th>Company</th><th>Role</th><th>Courses</th><th>Deadline</th><th>Featured</th><th>Actions</th></tr></thead><tbody>
+<tr th:each="o : ${opportunities}"><td th:text="${o.type}"></td><td th:text="${o.company}"></td><td th:text="${o.role}"></td><td th:text="${o.eligibleCourses}"></td><td th:text="${o.deadline != null ? o.deadline : '-'}"></td><td><span class="status-pill yes" th:if="${o.featured}">Yes</span><span class="status-pill" th:unless="${o.featured}">No</span></td><td class="row-actions"><a th:href="@{'/admin/opportunities/' + ${o.id} + '/edit'}">Edit</a><form th:action="@{'/admin/opportunities/' + ${o.id} + '/delete'}" method="post"><button class="link-danger" type="submit">Delete</button></form></td></tr>
+</tbody></table></div>
 
 <h2>Most Downloaded</h2>
 <div class="table-wrap"><table><thead><tr><th>Resource</th><th>Course</th><th>Subject</th><th>Downloads</th></tr></thead><tbody>
