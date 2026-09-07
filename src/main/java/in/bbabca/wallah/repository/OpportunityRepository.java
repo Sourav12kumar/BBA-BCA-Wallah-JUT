@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface OpportunityRepository extends JpaRepository<Opportunity, Long> {
     List<Opportunity> findByTypeAndActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc(OpportunityType type);
+    List<Opportunity> findByActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc();
     List<Opportunity> findTop6ByActiveTrueOrderByFeaturedDescCreatedAtDesc();
     long countByType(OpportunityType type);
 }
