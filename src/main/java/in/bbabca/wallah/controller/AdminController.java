@@ -2,9 +2,11 @@ package in.bbabca.wallah.controller;
 
 import in.bbabca.wallah.model.*;
 import in.bbabca.wallah.repository.*;
+import in.bbabca.wallah.service.FileStorageService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 @RequestMapping("/admin")
@@ -12,13 +14,16 @@ public class AdminController {
     private final AcademicResourceRepository resourceRepository;
     private final NoticeRepository noticeRepository;
     private final SubjectRepository subjectRepository;
+    private final FileStorageService fileStorageService;
 
     public AdminController(AcademicResourceRepository resourceRepository,
                            NoticeRepository noticeRepository,
-                           SubjectRepository subjectRepository) {
+                           SubjectRepository subjectRepository,
+                           FileStorageService fileStorageService) {
         this.resourceRepository = resourceRepository;
         this.noticeRepository = noticeRepository;
         this.subjectRepository = subjectRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping("/login")
@@ -63,31 +68,53 @@ public class AdminController {
 
     @GetMapping("/resources/new")
     public String newResource(Model model) {
-        model.addAttribute("resource", new AcademicResource());
-        model.addAttribute("courses", Course.values());
-        model.addAttribute("types", ResourceType.values());
-        model.addAttribute("subjects", subjectRepository.findByActiveTrueOrderByCourseAscSemesterAscNameAsc());
+        prepareResourceForm(model, new AcademicResource());
         return "admin/resource-form";
     }
 
     @PostMapping("/resources")
-    public String saveResource(@ModelAttribute AcademicResource resource) {
-        resourceRepository.save(resource);
-        return "redirect:/admin";
+    public String saveResource(@ModelAttribute AcademicResource resource,
+                               @RequestParam(name = "file", required = false) MultipartFile file,
+                               Model model) {
+        try {
+            String previousUrl = null;
+            if (resource.getId() != null) {
+                previousUrl = resourceRepository.findById(resource.getId())
+                        .map(AcademicResource::getFileUrl)
+                        .orElse(null);
+            }
+
+            if (file != null && !file.isEmpty()) {
+                String storedName = fileStorageService.store(file);
+                if (previousUrl != null && previousUrl.startsWith("/files/")) {
+                    fileStorageService.deleteByPublicUrl(previousUrl);
+                }
+                resource.setFileUrl("/files/" + storedName);
+            } else if ((resource.getFileUrl() == null || resource.getFileUrl().isBlank()) && previousUrl != null) {
+                resource.setFileUrl(previousUrl);
+            }
+
+            resourceRepository.save(resource);
+            return "redirect:/admin";
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            prepareResourceForm(model, resource);
+            model.addAttribute("uploadError", ex.getMessage());
+            return "admin/resource-form";
+        }
     }
 
     @GetMapping("/resources/{id}/edit")
     public String editResource(@PathVariable Long id, Model model) {
-        model.addAttribute("resource", resourceRepository.findById(id).orElseThrow());
-        model.addAttribute("courses", Course.values());
-        model.addAttribute("types", ResourceType.values());
-        model.addAttribute("subjects", subjectRepository.findByActiveTrueOrderByCourseAscSemesterAscNameAsc());
+        prepareResourceForm(model, resourceRepository.findById(id).orElseThrow());
         return "admin/resource-form";
     }
 
     @PostMapping("/resources/{id}/delete")
     public String deleteResource(@PathVariable Long id) {
-        resourceRepository.deleteById(id);
+        resourceRepository.findById(id).ifPresent(resource -> {
+            fileStorageService.deleteByPublicUrl(resource.getFileUrl());
+            resourceRepository.delete(resource);
+        });
         return "redirect:/admin";
     }
 
@@ -113,5 +140,12 @@ public class AdminController {
     public String deleteNotice(@PathVariable Long id) {
         noticeRepository.deleteById(id);
         return "redirect:/admin";
+    }
+
+    private void prepareResourceForm(Model model, AcademicResource resource) {
+        model.addAttribute("resource", resource);
+        model.addAttribute("courses", Course.values());
+        model.addAttribute("types", ResourceType.values());
+        model.addAttribute("subjects", subjectRepository.findByActiveTrueOrderByCourseAscSemesterAscNameAsc());
     }
 }
