@@ -13,7 +13,7 @@
 
     <div class="alert error" th:if="${uploadError}" th:text="${uploadError}"></div>
 
-    <form class="admin-form" th:object="${resource}" method="post" action="/admin/resources" enctype="multipart/form-data">
+    <form class="admin-form" th:object="${resource}" method="post" th:action="@{/admin/resources}" enctype="multipart/form-data">
         <input type="hidden" th:field="*{id}">
 
         <label>Title</label>
