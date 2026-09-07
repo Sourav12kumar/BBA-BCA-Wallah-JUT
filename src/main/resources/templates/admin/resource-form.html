@@ -61,6 +61,11 @@
         <textarea th:field="*{description}" rows="5"></textarea>
 
         <label class="check">
+            <input type="checkbox" th:field="*{featured}"> Featured Resource
+        </label>
+        <small class="form-help">Featured resources are promoted on the homepage and appear first in resource lists.</small>
+
+        <label class="check">
             <input type="checkbox" th:field="*{active}"> Active
         </label>
 
