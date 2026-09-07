@@ -37,6 +37,8 @@ Subject Dashboard
 - Pinned Important Notices section
 - Dedicated **Placements** page
 - Dedicated **Internships** page
+- Combined `/opportunities` career browser
+- Opportunity filters by **type, course, batch, location and keyword**
 - Placement/internship cards with company, role, location, eligible batch, eligible courses, eligibility, deadline and apply link
 - Featured opportunities automatically appear first
 - Latest placements and internships highlighted on the homepage
@@ -61,10 +63,10 @@ Subject Dashboard
 
 The admin can create a structured opportunity instead of using a normal notice.
 
-### Placement fields
+### Opportunity fields
 
 ```text
-Type: Placement
+Type: Placement / Internship
 Company / Organization
 Role / Position
 Location
@@ -78,18 +80,27 @@ Featured
 Active
 ```
 
-### Internship fields
-
-The same structured fields are available with `Type = Internship`.
-
 Students can browse:
 
 ```text
 /placements
 /internships
+/opportunities
 ```
 
-Featured opportunities are shown first, and the homepage displays the latest active career opportunities.
+### Career Opportunity Filters
+
+The opportunity browser supports:
+
+```text
+Keyword
+Type: Placement / Internship
+Course: BCA / BBA / values entered by admin
+Batch: 2026 / 2027 / etc.
+Location: Remote / Ranchi / Bengaluru / etc.
+```
+
+Filter options are generated dynamically from active opportunity data. Featured opportunities remain first after filtering, followed by nearest application deadline and then latest entries.
 
 ## Priority Content Flow
 
@@ -153,13 +164,13 @@ Open:
 3. Feature high-value resources.
 4. Publish and pin urgent notices.
 5. Add current placement and internship opportunities.
-6. Feature important career opportunities.
-7. Review download analytics to identify popular material.
+6. Enter clean course, batch and location values so filters remain useful.
+7. Feature important career opportunities.
+8. Review download analytics to identify popular material.
 
 ## Roadmap
 
 - Cloud object storage
-- Opportunity filtering by course/batch/location
 - Date-range analytics
 - Pagination
 - SEO metadata
