@@ -3,6 +3,30 @@
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Resources | BBA/BCA Wallah</title><link rel="stylesheet" href="/css/style.css"></head>
 <body><div th:replace="~{fragments :: header}"></div>
 <section class="section"><h1>Academic Resources</h1>
-<form class="filters" method="get" action="/resources"><input name="q" placeholder="Search by title"><select name="course"><option value="">Course</option><option th:each="c : ${courses}" th:value="${c}" th:text="${c}"></option></select><select name="semester"><option value="">Semester</option><option th:each="s : ${#numbers.sequence(1,6)}" th:value="${s}" th:text="${'Semester ' + s}"></option></select><select name="type"><option value="">Resource Type</option><option th:each="t : ${types}" th:value="${t}" th:text="${t}"></option></select><button class="btn primary" type="submit">Filter</button></form>
+<form class="filters resource-filters" method="get" action="/resources">
+<input name="q" th:value="${selectedQuery}" placeholder="Search by title">
+<select name="course"><option value="">Course</option><option th:each="c : ${courses}" th:value="${c}" th:text="${c}" th:selected="${selectedCourse != null and selectedCourse == c}"></option></select>
+<select name="semester"><option value="">Semester</option><option th:each="s : ${#numbers.sequence(1,6)}" th:value="${s}" th:text="${'Semester ' + s}" th:selected="${selectedSemester != null and selectedSemester == s}"></option></select>
+<select name="type"><option value="">Resource Type</option><option th:each="t : ${types}" th:value="${t}" th:text="${t}" th:selected="${selectedResourceType != null and selectedResourceType == t}"></option></select>
+<select name="sort">
+<option value="featured" th:selected="${selectedSort == 'featured'}">Featured First</option>
+<option value="newest" th:selected="${selectedSort == 'newest'}">Newest First</option>
+<option value="downloads" th:selected="${selectedSort == 'downloads'}">Most Downloaded</option>
+<option value="title" th:selected="${selectedSort == 'title'}">Title A-Z</option>
+</select>
+<button class="btn primary" type="submit">Apply</button>
+<a class="btn secondary" href="/resources">Clear</a>
+</form>
+
+<div class="filter-summary"><strong th:text="${totalResults}"></strong><span> resource(s) found</span></div>
+
 <div class="cards"><article class="card" th:each="r : ${resources}"><div class="badge-row"><span class="badge small featured-badge" th:if="${r.featured}">FEATURED</span><span class="badge small" th:text="${r.type}"></span></div><h3 th:text="${r.title}"></h3><p><strong th:text="${r.course}"></strong> • Semester <span th:text="${r.semester}"></span></p><p th:if="${r.subject != null}" th:text="${'Subject: ' + r.subject.name}"></p><p th:text="${r.description}"></p><p class="download-meta" th:text="${r.downloadCount + ' downloads'}"></p><a class="btn primary" th:if="${r.fileUrl != null and !r.fileUrl.isBlank()}" th:href="@{'/resource/' + ${r.id} + '/download'}">Download / Open</a></article></div>
+
+<div class="empty-state" th:if="${#lists.isEmpty(resources)}"><h3>No resources found</h3><p>Try changing or clearing the filters.</p><a class="btn secondary" href="/resources">Clear Filters</a></div>
+
+<nav class="pagination" th:if="${totalPages > 1}">
+<a class="page-link" th:classappend="${!hasPrevious} ? ' disabled'" th:href="@{/resources(page=${currentPage - 1},q=${selectedQuery},course=${selectedCourse},semester=${selectedSemester},type=${selectedResourceType},sort=${selectedSort})}">← Previous</a>
+<span class="page-status" th:text="${'Page ' + (currentPage + 1) + ' of ' + totalPages}"></span>
+<a class="page-link" th:classappend="${!hasNext} ? ' disabled'" th:href="@{/resources(page=${currentPage + 1},q=${selectedQuery},course=${selectedCourse},semester=${selectedSemester},type=${selectedResourceType},sort=${selectedSort})}">Next →</a>
+</nav>
 </section><div th:replace="~{fragments :: footer}"></div></body></html>
