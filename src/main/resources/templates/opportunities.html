@@ -45,12 +45,18 @@
                     th:selected="${selectedLocation != null and selectedLocation == l}"></option>
         </select>
 
+        <select name="sort">
+            <option value="featured" th:selected="${selectedSort == 'featured'}">Featured First</option>
+            <option value="newest" th:selected="${selectedSort == 'newest'}">Newest First</option>
+            <option value="deadline" th:selected="${selectedSort == 'deadline'}">Deadline Soonest</option>
+        </select>
+
         <button class="btn primary" type="submit">Apply Filters</button>
         <a class="btn secondary" href="/opportunities">Clear</a>
     </form>
 
     <div class="filter-summary">
-        <strong th:text="${opportunities.size()}"></strong>
+        <strong th:text="${totalResults}"></strong>
         <span> matching opportunity/opportunities</span>
     </div>
 
@@ -79,6 +85,14 @@
         <p>Try changing or clearing one or more filters.</p>
         <a class="btn secondary" href="/opportunities">Clear Filters</a>
     </div>
+
+    <nav class="pagination" th:if="${totalPages > 1}">
+        <a class="page-link" th:classappend="${!hasPrevious} ? ' disabled'"
+           th:href="@{/opportunities(page=${currentPage - 1},q=${selectedQuery},type=${selectedType},course=${selectedCourse},batch=${selectedBatch},location=${selectedLocation},sort=${selectedSort})}">← Previous</a>
+        <span class="page-status" th:text="${'Page ' + (currentPage + 1) + ' of ' + totalPages}"></span>
+        <a class="page-link" th:classappend="${!hasNext} ? ' disabled'"
+           th:href="@{/opportunities(page=${currentPage + 1},q=${selectedQuery},type=${selectedType},course=${selectedCourse},batch=${selectedBatch},location=${selectedLocation},sort=${selectedSort})}">Next →</a>
+    </nav>
 </section>
 
 <div th:replace="~{fragments :: footer}"></div>
