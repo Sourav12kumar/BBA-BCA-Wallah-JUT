@@ -14,6 +14,8 @@ import java.util.Map;
 
 @Controller
 public class PublicController {
+    private static final int PAGE_SIZE = 12;
+
     private final AcademicResourceRepository resourceRepository;
     private final NoticeRepository noticeRepository;
     private final SubjectRepository subjectRepository;
@@ -45,8 +47,10 @@ public class PublicController {
                              @RequestParam(required = false) String batch,
                              @RequestParam(required = false) String location,
                              @RequestParam(required = false) String q,
+                             @RequestParam(defaultValue = "featured") String sort,
+                             @RequestParam(defaultValue = "0") int page,
                              Model model) {
-        return opportunityPage(OpportunityType.PLACEMENT, course, batch, location, q, model,
+        return opportunityPage(OpportunityType.PLACEMENT, course, batch, location, q, sort, page, model,
                 "Placement Opportunities",
                 "Latest placement and job opportunities for BBA and BCA students.");
     }
@@ -56,8 +60,10 @@ public class PublicController {
                               @RequestParam(required = false) String batch,
                               @RequestParam(required = false) String location,
                               @RequestParam(required = false) String q,
+                              @RequestParam(defaultValue = "featured") String sort,
+                              @RequestParam(defaultValue = "0") int page,
                               Model model) {
-        return opportunityPage(OpportunityType.INTERNSHIP, course, batch, location, q, model,
+        return opportunityPage(OpportunityType.INTERNSHIP, course, batch, location, q, sort, page, model,
                 "Internship Opportunities",
                 "Internship opportunities, training programs and student hiring updates for BBA and BCA students.");
     }
@@ -68,8 +74,10 @@ public class PublicController {
                                 @RequestParam(required = false) String batch,
                                 @RequestParam(required = false) String location,
                                 @RequestParam(required = false) String q,
+                                @RequestParam(defaultValue = "featured") String sort,
+                                @RequestParam(defaultValue = "0") int page,
                                 Model model) {
-        return opportunityPage(type, course, batch, location, q, model,
+        return opportunityPage(type, course, batch, location, q, sort, page, model,
                 type == null ? "Career Opportunities" : (type == OpportunityType.PLACEMENT ? "Placement Opportunities" : "Internship Opportunities"),
                 "Filter placement and internship opportunities by course, batch, location and keyword.");
     }
@@ -79,6 +87,8 @@ public class PublicController {
                                    String batch,
                                    String location,
                                    String q,
+                                   String sort,
+                                   int page,
                                    Model model,
                                    String pageTitle,
                                    String pageDescription) {
@@ -91,6 +101,15 @@ public class PublicController {
         String locationNeedle = normalize(location);
         String keyword = normalize(q);
 
+        Comparator<Opportunity> comparator = switch (normalize(sort)) {
+            case "newest" -> Comparator.comparing(Opportunity::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()));
+            case "deadline" -> Comparator.comparing(Opportunity::getDeadline, Comparator.nullsLast(Comparator.naturalOrder()))
+                    .thenComparing(Opportunity::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()));
+            default -> Comparator.comparing(Opportunity::isFeatured).reversed()
+                    .thenComparing(Opportunity::getDeadline, Comparator.nullsLast(Comparator.naturalOrder()))
+                    .thenComparing(Opportunity::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()));
+        };
+
         List<Opportunity> filtered = all.stream()
                 .filter(o -> courseNeedle.isBlank() || contains(o.getEligibleCourses(), courseNeedle))
                 .filter(o -> batchNeedle.isBlank() || contains(o.getBatch(), batchNeedle))
@@ -100,25 +119,31 @@ public class PublicController {
                         || contains(o.getRole(), keyword)
                         || contains(o.getDescription(), keyword)
                         || contains(o.getEligibility(), keyword))
-                .sorted(Comparator.comparing(Opportunity::isFeatured).reversed()
-                        .thenComparing(Opportunity::getDeadline, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(Opportunity::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .sorted(comparator)
                 .toList();
 
-        List<String> courses = opportunityRepository.findByActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc().stream()
+        PageSlice<Opportunity> slice = paginate(filtered, page);
+
+        List<Opportunity> activeOpportunities = opportunityRepository.findByActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc();
+        List<String> courses = activeOpportunities.stream()
                 .flatMap(o -> splitValues(o.getEligibleCourses()).stream())
                 .distinct().sorted().toList();
-        List<String> batches = opportunityRepository.findByActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc().stream()
+        List<String> batches = activeOpportunities.stream()
                 .flatMap(o -> splitValues(o.getBatch()).stream())
                 .distinct().sorted().toList();
-        List<String> locations = opportunityRepository.findByActiveTrueOrderByFeaturedDescDeadlineAscCreatedAtDesc().stream()
+        List<String> locations = activeOpportunities.stream()
                 .map(Opportunity::getLocation)
                 .filter(v -> v != null && !v.isBlank())
                 .distinct().sorted().toList();
 
         model.addAttribute("pageTitle", pageTitle);
         model.addAttribute("pageDescription", pageDescription);
-        model.addAttribute("opportunities", filtered);
+        model.addAttribute("opportunities", slice.items());
+        model.addAttribute("totalResults", filtered.size());
+        model.addAttribute("currentPage", slice.currentPage());
+        model.addAttribute("totalPages", slice.totalPages());
+        model.addAttribute("hasPrevious", slice.currentPage() > 0);
+        model.addAttribute("hasNext", slice.currentPage() + 1 < slice.totalPages());
         model.addAttribute("opportunityType", type);
         model.addAttribute("types", OpportunityType.values());
         model.addAttribute("courseOptions", courses);
@@ -129,23 +154,8 @@ public class PublicController {
         model.addAttribute("selectedLocation", location);
         model.addAttribute("selectedQuery", q);
         model.addAttribute("selectedType", type);
+        model.addAttribute("selectedSort", normalize(sort).isBlank() ? "featured" : sort);
         return "opportunities";
-    }
-
-    private static boolean contains(String value, String needle) {
-        return value != null && value.toLowerCase(Locale.ROOT).contains(needle);
-    }
-
-    private static String normalize(String value) {
-        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
-    }
-
-    private static List<String> splitValues(String value) {
-        if (value == null || value.isBlank()) return List.of();
-        return java.util.Arrays.stream(value.split("[,/|]"))
-                .map(String::trim)
-                .filter(v -> !v.isBlank())
-                .toList();
     }
 
     @GetMapping("/resource/{id}/download")
@@ -186,8 +196,10 @@ public class PublicController {
                             @RequestParam(required=false) Integer semester,
                             @RequestParam(required=false) ResourceType type,
                             @RequestParam(required=false) String q,
+                            @RequestParam(defaultValue = "featured") String sort,
+                            @RequestParam(defaultValue = "0") int page,
                             Model model) {
-        var results = resourceRepository.findByActiveTrueOrderByFeaturedDescCreatedAtDesc();
+        List<AcademicResource> results = resourceRepository.findByActiveTrueOrderByFeaturedDescCreatedAtDesc();
         if (q != null && !q.isBlank()) {
             results = resourceRepository.findByTitleContainingIgnoreCaseAndActiveTrueOrderByFeaturedDescCreatedAtDesc(q);
         } else if (course != null && semester != null && type != null) {
@@ -195,9 +207,32 @@ public class PublicController {
         } else if (course != null && semester != null) {
             results = resourceRepository.findByCourseAndSemesterAndActiveTrueOrderByFeaturedDescCreatedAtDesc(course, semester);
         }
-        model.addAttribute("resources", results);
+
+        Comparator<AcademicResource> comparator = switch (normalize(sort)) {
+            case "newest" -> Comparator.comparing(AcademicResource::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()));
+            case "downloads" -> Comparator.comparingLong(AcademicResource::getDownloadCount).reversed()
+                    .thenComparing(AcademicResource::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()));
+            case "title" -> Comparator.comparing(AcademicResource::getTitle, String.CASE_INSENSITIVE_ORDER);
+            default -> Comparator.comparing(AcademicResource::isFeatured).reversed()
+                    .thenComparing(AcademicResource::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()));
+        };
+
+        List<AcademicResource> sorted = results.stream().sorted(comparator).toList();
+        PageSlice<AcademicResource> slice = paginate(sorted, page);
+
+        model.addAttribute("resources", slice.items());
+        model.addAttribute("totalResults", sorted.size());
+        model.addAttribute("currentPage", slice.currentPage());
+        model.addAttribute("totalPages", slice.totalPages());
+        model.addAttribute("hasPrevious", slice.currentPage() > 0);
+        model.addAttribute("hasNext", slice.currentPage() + 1 < slice.totalPages());
         model.addAttribute("courses", Course.values());
         model.addAttribute("types", ResourceType.values());
+        model.addAttribute("selectedCourse", course);
+        model.addAttribute("selectedSemester", semester);
+        model.addAttribute("selectedResourceType", type);
+        model.addAttribute("selectedQuery", q);
+        model.addAttribute("selectedSort", normalize(sort).isBlank() ? "featured" : sort);
         return "resources";
     }
 
@@ -209,4 +244,31 @@ public class PublicController {
 
     @GetMapping("/about")
     public String about() { return "about"; }
+
+    private static boolean contains(String value, String needle) {
+        return value != null && value.toLowerCase(Locale.ROOT).contains(needle);
+    }
+
+    private static String normalize(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static List<String> splitValues(String value) {
+        if (value == null || value.isBlank()) return List.of();
+        return java.util.Arrays.stream(value.split("[,/|]"))
+                .map(String::trim)
+                .filter(v -> !v.isBlank())
+                .toList();
+    }
+
+    private static <T> PageSlice<T> paginate(List<T> items, int requestedPage) {
+        int totalPages = items.isEmpty() ? 0 : (int) Math.ceil(items.size() / (double) PAGE_SIZE);
+        int page = Math.max(0, requestedPage);
+        if (totalPages > 0) page = Math.min(page, totalPages - 1);
+        int start = Math.min(page * PAGE_SIZE, items.size());
+        int end = Math.min(start + PAGE_SIZE, items.size());
+        return new PageSlice<>(items.subList(start, end), page, totalPages);
+    }
+
+    private record PageSlice<T>(List<T> items, int currentPage, int totalPages) {}
 }
