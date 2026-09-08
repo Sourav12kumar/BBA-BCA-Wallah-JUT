@@ -39,8 +39,10 @@ Subject Dashboard
 - Dedicated **Internships** page
 - Combined `/opportunities` career browser
 - Opportunity filters by **type, course, batch, location and keyword**
+- Pagination for academic resources and career opportunities
+- Sorting for resources by **Featured, Newest, Most Downloaded, Title A-Z**
+- Sorting for opportunities by **Featured, Newest, Deadline Soonest**
 - Placement/internship cards with company, role, location, eligible batch, eligible courses, eligibility, deadline and apply link
-- Featured opportunities automatically appear first
 - Latest placements and internships highlighted on the homepage
 
 ## Admin Features
@@ -61,25 +63,6 @@ Subject Dashboard
 
 ## Placement & Internship Module
 
-The admin can create a structured opportunity instead of using a normal notice.
-
-### Opportunity fields
-
-```text
-Type: Placement / Internship
-Company / Organization
-Role / Position
-Location
-Eligible Batch
-Eligible Courses
-Eligibility
-Application Deadline
-Apply Link
-Description
-Featured
-Active
-```
-
 Students can browse:
 
 ```text
@@ -90,27 +73,43 @@ Students can browse:
 
 ### Career Opportunity Filters
 
-The opportunity browser supports:
-
 ```text
 Keyword
 Type: Placement / Internship
-Course: BCA / BBA / values entered by admin
-Batch: 2026 / 2027 / etc.
-Location: Remote / Ranchi / Bengaluru / etc.
+Course
+Batch
+Location
+Sort: Featured / Newest / Deadline Soonest
 ```
 
-Filter options are generated dynamically from active opportunity data. Featured opportunities remain first after filtering, followed by nearest application deadline and then latest entries.
+Filter options are generated dynamically from active opportunity data.
+
+## Pagination & Sorting
+
+Academic resources and career opportunities are shown **12 items per page** so the UI remains usable as the database grows.
+
+### Resource sort options
+
+```text
+Featured First
+Newest First
+Most Downloaded
+Title A-Z
+```
+
+### Opportunity sort options
+
+```text
+Featured First
+Newest First
+Deadline Soonest
+```
+
+Filters and sort choices are preserved while navigating between pages.
 
 ## Priority Content Flow
 
-### Featured Resources
-
-Featured resources appear in a dedicated homepage section, before normal resource results, and at the top of subject categories.
-
-### Pinned Notices
-
-Pinned notices appear in the Important Notices homepage section and before regular notices.
+Featured resources appear before normal resources, while pinned notices appear before regular notices and in the Important Notices homepage section.
 
 ## Download Analytics Flow
 
@@ -172,7 +171,6 @@ Open:
 
 - Cloud object storage
 - Date-range analytics
-- Pagination
 - SEO metadata
 - Mobile/PWA improvements
 - CI/CD deployment
