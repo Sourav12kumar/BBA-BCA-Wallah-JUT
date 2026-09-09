@@ -66,6 +66,14 @@ jobs:
           BACKUP_INTERVAL_SECONDS: 86400
           BACKUP_RETENTION_DAYS: 14
           BACKUP_ON_START: "true"
+          S3_ENDPOINT: https://s3.example.com
+          S3_BUCKET: ci-backups
+          S3_PREFIX: bba-bca-wallah
+          S3_ACCESS_KEY: ci-access-key
+          S3_SECRET_KEY: ci-secret-key
+          REMOTE_SYNC_INTERVAL_SECONDS: 3600
+          REMOTE_SYNC_ON_START: "true"
+          REMOTE_RETENTION_DAYS: 30
         run: docker compose -f docker-compose.prod.yml config
 
       - name: Build application image
@@ -73,6 +81,9 @@ jobs:
 
       - name: Build backup image
         run: docker build -f Dockerfile.backup --tag bba-bca-wallah-backup:ci .
+
+      - name: Build remote backup image
+        run: docker build -f Dockerfile.remote-backup --tag bba-bca-wallah-remote-backup:ci .
 
       - name: Shell syntax check for recovery scripts
         run: |
@@ -83,3 +94,6 @@ jobs:
           sh -n scripts/full-backup.sh
           sh -n scripts/restore-full.sh
           sh -n scripts/backup-loop.sh
+          sh -n scripts/sync-backups-remote.sh
+          sh -n scripts/download-backup-remote.sh
+          sh -n scripts/remote-sync-loop.sh
