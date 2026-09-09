@@ -69,6 +69,7 @@ services:
       - app_network
 
   remote-backup:
+    profiles: ["remote-backup"]
     build:
       context: .
       dockerfile: Dockerfile.remote-backup
