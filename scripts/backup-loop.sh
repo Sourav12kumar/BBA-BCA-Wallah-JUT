@@ -16,11 +16,11 @@ if [ "$INTERVAL_SECONDS" -le 0 ]; then
 fi
 
 if [ "${BACKUP_ON_START:-true}" = "true" ]; then
-  /scripts/backup-db.sh
+  /scripts/full-backup.sh
 fi
 
 while true; do
-  echo "Next database backup in ${INTERVAL_SECONDS} second(s)"
+  echo "Next full-site backup in ${INTERVAL_SECONDS} second(s)"
   sleep "$INTERVAL_SECONDS"
-  /scripts/backup-db.sh
+  /scripts/full-backup.sh
 done
