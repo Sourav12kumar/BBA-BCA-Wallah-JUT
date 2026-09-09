@@ -44,9 +44,32 @@ services:
     networks:
       - app_network
 
+  backup:
+    build:
+      context: .
+      dockerfile: Dockerfile.backup
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_NAME: bba_bca_wallah
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      BACKUP_DIR: /backups
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      BACKUP_ON_START: ${BACKUP_ON_START:-true}
+    volumes:
+      - db_backups:/backups
+    restart: unless-stopped
+    networks:
+      - app_network
+
 volumes:
   mysql_data:
   resource_uploads:
+  db_backups:
 
 networks:
   app_network:
