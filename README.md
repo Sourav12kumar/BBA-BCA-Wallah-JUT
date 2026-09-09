@@ -42,8 +42,47 @@ Subject Dashboard
 - Pagination for academic resources and career opportunities
 - Sorting for resources by **Featured, Newest, Most Downloaded, Title A-Z**
 - Sorting for opportunities by **Featured, Newest, Deadline Soonest**
-- Placement/internship cards with company, role, location, eligible batch, eligible courses, eligibility, deadline and apply link
-- Latest placements and internships highlighted on the homepage
+- Shareable public detail page for every resource
+- Shareable public detail page for every placement/internship opportunity
+- Web Share / Copy Link actions on detail pages
+
+## SEO & Shareable Pages
+
+Each active resource has a public page:
+
+```text
+/resource/{id}
+```
+
+Each active placement or internship has a public page:
+
+```text
+/opportunity/{id}
+```
+
+These detail pages include:
+
+- unique page title
+- meta description
+- canonical URL
+- Open Graph title, description and URL
+- Twitter summary metadata
+- native Web Share support where available
+- Copy Link fallback
+
+A dynamic sitemap is available at:
+
+```text
+/sitemap.xml
+```
+
+The production base URL is configured through:
+
+```text
+SITE_URL=https://your-domain.example
+```
+
+For local development it defaults to `http://localhost:8080`.
 
 ## Admin Features
 
@@ -107,10 +146,6 @@ Deadline Soonest
 
 Filters and sort choices are preserved while navigating between pages.
 
-## Priority Content Flow
-
-Featured resources appear before normal resources, while pinned notices appear before regular notices and in the Important Notices homepage section.
-
 ## Download Analytics Flow
 
 All student download/open actions use:
@@ -141,6 +176,7 @@ Copy `.env.example` to `.env` and set strong values for:
 MYSQL_ROOT_PASSWORD
 ADMIN_USERNAME
 ADMIN_PASSWORD
+SITE_URL
 ```
 
 Do not commit the real `.env` file.
@@ -156,22 +192,10 @@ Open:
 - Student website: http://localhost:8080
 - Admin panel: http://localhost:8080/admin
 
-## Recommended Admin Workflow
-
-1. Add BBA/BCA subjects semester-wise.
-2. Add syllabus, notes, PYQs and other academic resources.
-3. Feature high-value resources.
-4. Publish and pin urgent notices.
-5. Add current placement and internship opportunities.
-6. Enter clean course, batch and location values so filters remain useful.
-7. Feature important career opportunities.
-8. Review download analytics to identify popular material.
-
 ## Roadmap
 
 - Cloud object storage
 - Date-range analytics
-- SEO metadata
 - Mobile/PWA improvements
 - CI/CD deployment
 - Contribution/contact workflow
