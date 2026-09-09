@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${pageTitle + ' | BBA/BCA Wallah'}"></title>
+    <meta name="description" th:content="${pageDescription}">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -20,53 +21,21 @@
 <section class="section">
     <form class="career-filters" method="get" action="/opportunities">
         <input type="search" name="q" th:value="${selectedQuery}" placeholder="Search company, role, skill...">
-
-        <select name="type">
-            <option value="">All Types</option>
-            <option th:each="t : ${types}" th:value="${t}" th:text="${t}"
-                    th:selected="${selectedType != null and selectedType == t}"></option>
-        </select>
-
-        <select name="course">
-            <option value="">All Courses</option>
-            <option th:each="c : ${courseOptions}" th:value="${c}" th:text="${c}"
-                    th:selected="${selectedCourse != null and selectedCourse == c}"></option>
-        </select>
-
-        <select name="batch">
-            <option value="">All Batches</option>
-            <option th:each="b : ${batchOptions}" th:value="${b}" th:text="${b}"
-                    th:selected="${selectedBatch != null and selectedBatch == b}"></option>
-        </select>
-
-        <select name="location">
-            <option value="">All Locations</option>
-            <option th:each="l : ${locationOptions}" th:value="${l}" th:text="${l}"
-                    th:selected="${selectedLocation != null and selectedLocation == l}"></option>
-        </select>
-
-        <select name="sort">
-            <option value="featured" th:selected="${selectedSort == 'featured'}">Featured First</option>
-            <option value="newest" th:selected="${selectedSort == 'newest'}">Newest First</option>
-            <option value="deadline" th:selected="${selectedSort == 'deadline'}">Deadline Soonest</option>
-        </select>
-
+        <select name="type"><option value="">All Types</option><option th:each="t : ${types}" th:value="${t}" th:text="${t}" th:selected="${selectedType != null and selectedType == t}"></option></select>
+        <select name="course"><option value="">All Courses</option><option th:each="c : ${courseOptions}" th:value="${c}" th:text="${c}" th:selected="${selectedCourse != null and selectedCourse == c}"></option></select>
+        <select name="batch"><option value="">All Batches</option><option th:each="b : ${batchOptions}" th:value="${b}" th:text="${b}" th:selected="${selectedBatch != null and selectedBatch == b}"></option></select>
+        <select name="location"><option value="">All Locations</option><option th:each="l : ${locationOptions}" th:value="${l}" th:text="${l}" th:selected="${selectedLocation != null and selectedLocation == l}"></option></select>
+        <select name="sort"><option value="featured" th:selected="${selectedSort == 'featured'}">Featured First</option><option value="newest" th:selected="${selectedSort == 'newest'}">Newest First</option><option value="deadline" th:selected="${selectedSort == 'deadline'}">Deadline Soonest</option></select>
         <button class="btn primary" type="submit">Apply Filters</button>
         <a class="btn secondary" href="/opportunities">Clear</a>
     </form>
 
-    <div class="filter-summary">
-        <strong th:text="${totalResults}"></strong>
-        <span> matching opportunity/opportunities</span>
-    </div>
+    <div class="filter-summary"><strong th:text="${totalResults}"></strong><span> matching opportunity/opportunities</span></div>
 
     <div class="cards opportunity-grid">
         <article class="card opportunity-card" th:each="o : ${opportunities}">
-            <div class="priority-row">
-                <span class="badge small" th:text="${o.type}"></span>
-                <span class="priority-badge" th:if="${o.featured}">FEATURED</span>
-            </div>
-            <h3 th:text="${o.role}"></h3>
+            <div class="priority-row"><span class="badge small" th:text="${o.type}"></span><span class="priority-badge" th:if="${o.featured}">FEATURED</span></div>
+            <h3><a class="detail-title-link" th:href="@{'/opportunity/' + ${o.id}}" th:text="${o.role}"></a></h3>
             <p class="company-name" th:text="${o.company}"></p>
             <div class="opportunity-meta">
                 <span th:if="${o.location != null and !o.location.isBlank()}" th:text="${'📍 ' + o.location}"></span>
@@ -76,22 +45,16 @@
             </div>
             <p th:if="${o.eligibility != null and !o.eligibility.isBlank()}" th:text="${o.eligibility}"></p>
             <p th:if="${o.description != null and !o.description.isBlank()}" th:text="${o.description}"></p>
-            <a class="btn primary" th:if="${o.applyUrl != null and !o.applyUrl.isBlank()}" th:href="${o.applyUrl}" target="_blank" rel="noopener">Apply Now</a>
+            <div class="card-actions"><a class="btn secondary" th:href="@{'/opportunity/' + ${o.id}}">View Details</a><a class="btn primary" th:if="${o.applyUrl != null and !o.applyUrl.isBlank()}" th:href="${o.applyUrl}" target="_blank" rel="noopener">Apply Now</a></div>
         </article>
     </div>
 
-    <div class="empty-state" th:if="${#lists.isEmpty(opportunities)}">
-        <h3>No matching opportunities</h3>
-        <p>Try changing or clearing one or more filters.</p>
-        <a class="btn secondary" href="/opportunities">Clear Filters</a>
-    </div>
+    <div class="empty-state" th:if="${#lists.isEmpty(opportunities)}"><h3>No matching opportunities</h3><p>Try changing or clearing one or more filters.</p><a class="btn secondary" href="/opportunities">Clear Filters</a></div>
 
     <nav class="pagination" th:if="${totalPages > 1}">
-        <a class="page-link" th:classappend="${!hasPrevious} ? ' disabled'"
-           th:href="@{/opportunities(page=${currentPage - 1},q=${selectedQuery},type=${selectedType},course=${selectedCourse},batch=${selectedBatch},location=${selectedLocation},sort=${selectedSort})}">← Previous</a>
+        <a class="page-link" th:classappend="${!hasPrevious} ? ' disabled'" th:href="@{/opportunities(page=${currentPage - 1},q=${selectedQuery},type=${selectedType},course=${selectedCourse},batch=${selectedBatch},location=${selectedLocation},sort=${selectedSort})}">← Previous</a>
         <span class="page-status" th:text="${'Page ' + (currentPage + 1) + ' of ' + totalPages}"></span>
-        <a class="page-link" th:classappend="${!hasNext} ? ' disabled'"
-           th:href="@{/opportunities(page=${currentPage + 1},q=${selectedQuery},type=${selectedType},course=${selectedCourse},batch=${selectedBatch},location=${selectedLocation},sort=${selectedSort})}">Next →</a>
+        <a class="page-link" th:classappend="${!hasNext} ? ' disabled'" th:href="@{/opportunities(page=${currentPage + 1},q=${selectedQuery},type=${selectedType},course=${selectedCourse},batch=${selectedBatch},location=${selectedLocation},sort=${selectedSort})}">Next →</a>
     </nav>
 </section>
 
