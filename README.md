@@ -179,4 +179,4 @@ Open:
 
 ## Disclaimer
 
-This is an independent student project and is not the official website of Jharkhand University of Technology.
+This is an independent student project and is not the official website of Jharkhand University of Technology. Understand
