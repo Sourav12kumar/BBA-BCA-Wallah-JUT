@@ -1,0 +1,52 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${seoTitle}">Resource | BBA/BCA Wallah JUT</title>
+    <meta name="description" th:content="${seoDescription}">
+    <link rel="canonical" th:href="${canonicalUrl}">
+    <meta property="og:type" content="article">
+    <meta property="og:title" th:content="${seoTitle}">
+    <meta property="og:description" th:content="${seoDescription}">
+    <meta property="og:url" th:content="${canonicalUrl}">
+    <meta property="og:site_name" content="BBA/BCA Wallah JUT">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" th:content="${seoTitle}">
+    <meta name="twitter:description" th:content="${seoDescription}">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<section class="subject-hero"><div>
+    <div class="badge-row"><span class="badge small featured-badge" th:if="${resource.featured}">FEATURED</span><span class="badge small" th:text="${resource.type}"></span></div>
+    <h1 th:text="${resource.title}"></h1>
+    <p th:text="${resource.course + ' • Semester ' + resource.semester}"></p>
+    <p th:if="${resource.subject != null}" th:text="${'Subject: ' + resource.subject.name}"></p>
+</div></section>
+<section class="section narrow">
+    <div class="detail-card">
+        <p th:if="${resource.sessionYear != null and !resource.sessionYear.isBlank()}" th:text="${'Session / Year: ' + resource.sessionYear}"></p>
+        <p th:if="${resource.description != null and !resource.description.isBlank()}" th:text="${resource.description}"></p>
+        <p class="download-meta" th:text="${resource.downloadCount + ' downloads'}"></p>
+        <div class="detail-actions">
+            <a class="btn primary" th:if="${resource.fileUrl != null and !resource.fileUrl.isBlank()}" th:href="@{'/resource/' + ${resource.id} + '/download'}">Download / Open</a>
+            <button class="btn secondary" type="button" onclick="sharePage()">Share</button>
+            <button class="btn secondary" type="button" onclick="copyPageLink()">Copy Link</button>
+        </div>
+        <p id="copy-status" class="form-help" aria-live="polite"></p>
+    </div>
+</section>
+<div th:replace="~{fragments :: footer}"></div>
+<script th:inline="javascript">
+function sharePage(){
+  const data={title:[[${seoTitle}]],text:[[${shareText}]],url:[[${canonicalUrl}]]};
+  if(navigator.share){navigator.share(data).catch(()=>{});}else{copyPageLink();}
+}
+function copyPageLink(){
+  const url=[[${canonicalUrl}]];
+  navigator.clipboard.writeText(url).then(()=>{document.getElementById('copy-status').textContent='Link copied.';});
+}
+</script>
+</body>
+</html>
