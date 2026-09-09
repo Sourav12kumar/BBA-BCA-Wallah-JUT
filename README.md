@@ -101,8 +101,10 @@ On pushes and pull requests to `main`:
 2. Maven dependencies are cached.
 3. Spring Boot tests run with an isolated H2 database.
 4. The deployable JAR is built and saved as a workflow artifact.
-5. `docker compose config` validates the Compose file.
-6. The Docker image is built to catch container-build failures.
+5. Local and production Compose configurations are validated.
+6. The application Docker image is built.
+7. The database-backup Docker image is built.
+8. Backup/restore shell scripts receive syntax checks.
 
 Workflow file:
 
@@ -143,13 +145,41 @@ Docker checks application health automatically. MySQL also has a readiness check
 For server deployment using the published image:
 
 ```bash
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml pull app
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-Production Compose does not expose MySQL publicly and keeps database/uploads in persistent Docker volumes.
+Production Compose does not expose MySQL publicly and keeps database/uploads/backups in persistent Docker volumes.
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for deployment, update, logs and rollback instructions.
+
+## Database Backup & Restore
+
+Production includes a dedicated MySQL backup container.
+
+Default behavior:
+
+```text
+BACKUP_INTERVAL_SECONDS=86400
+BACKUP_RETENTION_DAYS=14
+BACKUP_ON_START=true
+```
+
+This creates a compressed SQL backup every 24 hours, keeps 14 days of backups, and creates one backup when the backup service starts.
+
+Backups are stored in the persistent `db_backups` Docker volume.
+
+Manual backup:
+
+```bash
+docker compose -f docker-compose.prod.yml run --rm --entrypoint /scripts/backup-db.sh backup
+```
+
+Restore requires an explicit backup filename and `CONFIRM_RESTORE=YES` to reduce accidental destructive restores.
+
+See [BACKUP_RESTORE.md](BACKUP_RESTORE.md) for full backup, restore, retention, and recovery instructions.
+
+Important: SQL backups protect MySQL data. Uploaded documents remain in the separate `resource_uploads` volume and should also be backed up for complete disaster recovery.
 
 ## Tech Stack
 
@@ -179,6 +209,9 @@ SITE_URL
 APP_PORT
 APP_IMAGE
 JAVA_OPTS
+BACKUP_INTERVAL_SECONDS
+BACKUP_RETENTION_DAYS
+BACKUP_ON_START
 ```
 
 Do not commit the real `.env` file.
@@ -198,10 +231,10 @@ Open:
 ## Roadmap
 
 - Cloud object storage
+- Full uploaded-file backup/export
 - Date-range analytics
 - Mobile/PWA improvements
 - Reverse-proxy HTTPS example
-- Database backup automation
 - Contribution/contact workflow
 
 ## Disclaimer
