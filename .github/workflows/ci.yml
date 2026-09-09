@@ -71,11 +71,15 @@ jobs:
       - name: Build application image
         run: docker build --tag bba-bca-wallah-jut:ci .
 
-      - name: Build database backup image
+      - name: Build backup image
         run: docker build -f Dockerfile.backup --tag bba-bca-wallah-backup:ci .
 
-      - name: Shell syntax check for backup scripts
+      - name: Shell syntax check for recovery scripts
         run: |
           sh -n scripts/backup-db.sh
           sh -n scripts/restore-db.sh
+          sh -n scripts/backup-uploads.sh
+          sh -n scripts/restore-uploads.sh
+          sh -n scripts/full-backup.sh
+          sh -n scripts/restore-full.sh
           sh -n scripts/backup-loop.sh
