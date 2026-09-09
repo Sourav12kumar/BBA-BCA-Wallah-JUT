@@ -1,0 +1,56 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${seoTitle}">Opportunity | BBA/BCA Wallah JUT</title>
+    <meta name="description" th:content="${seoDescription}">
+    <link rel="canonical" th:href="${canonicalUrl}">
+    <meta property="og:type" content="article">
+    <meta property="og:title" th:content="${seoTitle}">
+    <meta property="og:description" th:content="${seoDescription}">
+    <meta property="og:url" th:content="${canonicalUrl}">
+    <meta property="og:site_name" content="BBA/BCA Wallah JUT">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" th:content="${seoTitle}">
+    <meta name="twitter:description" th:content="${seoDescription}">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<section class="subject-hero"><div>
+    <div class="badge-row"><span class="badge small" th:text="${opportunity.type}"></span><span class="badge small featured-badge" th:if="${opportunity.featured}">FEATURED</span></div>
+    <h1 th:text="${opportunity.role}"></h1>
+    <p class="company-name" th:text="${opportunity.company}"></p>
+</div></section>
+<section class="section narrow">
+    <div class="detail-card">
+        <div class="opportunity-meta">
+            <span th:if="${opportunity.location != null and !opportunity.location.isBlank()}" th:text="${'📍 ' + opportunity.location}"></span>
+            <span th:if="${opportunity.batch != null and !opportunity.batch.isBlank()}" th:text="${'Batch: ' + opportunity.batch}"></span>
+            <span th:if="${opportunity.eligibleCourses != null and !opportunity.eligibleCourses.isBlank()}" th:text="${'Courses: ' + opportunity.eligibleCourses}"></span>
+            <span th:if="${opportunity.deadline != null}" th:text="${'Deadline: ' + opportunity.deadline}"></span>
+        </div>
+        <p th:if="${opportunity.eligibility != null and !opportunity.eligibility.isBlank()}"><strong>Eligibility:</strong> <span th:text="${opportunity.eligibility}"></span></p>
+        <p th:if="${opportunity.description != null and !opportunity.description.isBlank()}" th:text="${opportunity.description}"></p>
+        <div class="detail-actions">
+            <a class="btn primary" th:if="${opportunity.applyUrl != null and !opportunity.applyUrl.isBlank()}" th:href="${opportunity.applyUrl}" target="_blank" rel="noopener">Apply Now</a>
+            <button class="btn secondary" type="button" onclick="sharePage()">Share</button>
+            <button class="btn secondary" type="button" onclick="copyPageLink()">Copy Link</button>
+        </div>
+        <p id="copy-status" class="form-help" aria-live="polite"></p>
+    </div>
+</section>
+<div th:replace="~{fragments :: footer}"></div>
+<script th:inline="javascript">
+function sharePage(){
+  const data={title:[[${seoTitle}]],text:[[${shareText}]],url:[[${canonicalUrl}]]};
+  if(navigator.share){navigator.share(data).catch(()=>{});}else{copyPageLink();}
+}
+function copyPageLink(){
+  const url=[[${canonicalUrl}]];
+  navigator.clipboard.writeText(url).then(()=>{document.getElementById('copy-status').textContent='Link copied.';});
+}
+</script>
+</body>
+</html>
