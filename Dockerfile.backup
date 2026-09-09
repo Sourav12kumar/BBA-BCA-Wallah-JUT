@@ -1,0 +1,6 @@
+FROM mysql:8.4
+
+COPY scripts /scripts
+RUN chmod +x /scripts/*.sh
+
+ENTRYPOINT ["/scripts/backup-loop.sh"]
