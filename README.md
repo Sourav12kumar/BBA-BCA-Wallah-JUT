@@ -35,14 +35,11 @@ Subject Dashboard
 - Most Downloaded Resources section
 - Featured Resources section
 - Pinned Important Notices section
-- Dedicated **Placements** page
-- Dedicated **Internships** page
+- Dedicated Placements and Internships pages
 - Combined `/opportunities` career browser
-- Opportunity filters by **type, course, batch, location and keyword**
-- Pagination for academic resources and career opportunities
-- Sorting for resources by **Featured, Newest, Most Downloaded, Title A-Z**
-- Sorting for opportunities by **Featured, Newest, Deadline Soonest**
-- Shareable public detail page for every resource and career opportunity
+- Opportunity filters by type, course, batch, location and keyword
+- Pagination and sorting for resources and opportunities
+- Shareable public detail pages
 - Web Share / Copy Link actions
 - Dynamic sitemap and social metadata
 
@@ -50,40 +47,20 @@ Subject Dashboard
 
 - Protected admin login
 - Add/edit/delete subjects, notices and academic resources
-- Upload PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX and TXT files
-- 20 MB maximum file size per upload
-- Optional Google Drive / OneDrive / public URL fallback
-- Mark academic resources as Featured
-- Pin important notices
-- Download analytics and most-downloaded ranking
-- Add/edit/delete placement and internship opportunities
-- Opportunity type, company, role, location, batch, course, eligibility, deadline, apply URL and description
-- Featured career opportunities
-- Placement and internship counts on admin dashboard
+- Direct document uploads plus external URL support
+- Featured resources and pinned notices
+- Download analytics
+- Placement/internship opportunity management
 
 ## SEO & Shareable Pages
 
-Active resources are available at:
+Resources: `/resource/{id}`
 
-```text
-/resource/{id}
-```
+Career opportunities: `/opportunity/{id}`
 
-Active placements/internships are available at:
+Dynamic sitemap: `/sitemap.xml`
 
-```text
-/opportunity/{id}
-```
-
-The pages include unique title/description metadata, canonical URLs, Open Graph metadata, Twitter summary metadata, native sharing and Copy Link fallback.
-
-Dynamic sitemap:
-
-```text
-/sitemap.xml
-```
-
-Set the production URL with:
+Configure production canonical URLs with:
 
 ```text
 SITE_URL=https://your-domain.example
@@ -91,73 +68,39 @@ SITE_URL=https://your-domain.example
 
 ## CI/CD & Deployment Readiness
 
-The repository includes GitHub Actions workflows for automated build validation and container publishing.
+GitHub Actions validates Java 21 builds, H2-backed Spring Boot tests, local/production Compose files, the application image, the recovery image, and all backup/restore shell scripts.
 
-### CI workflow
-
-On pushes and pull requests to `main`:
-
-1. Java 21 is configured.
-2. Maven dependencies are cached.
-3. Spring Boot tests run with an isolated H2 database.
-4. The deployable JAR is built and saved as a workflow artifact.
-5. Local and production Compose configurations are validated.
-6. The application Docker image is built.
-7. The database-backup Docker image is built.
-8. Backup/restore shell scripts receive syntax checks.
-
-Workflow file:
-
-```text
-.github/workflows/ci.yml
-```
-
-### Container publishing
-
-On pushes to `main` and version tags such as `v1.0.0`, GitHub Actions publishes a production Docker image to GitHub Container Registry (GHCR).
-
-Image:
+Production application image:
 
 ```text
 ghcr.io/sourav12kumar/bba-bca-wallah-jut:latest
 ```
 
-It also publishes commit-SHA tags that can be used for exact deployments and rollback.
-
-Workflow file:
-
-```text
-.github/workflows/publish-image.yml
-```
-
-### Health checks
-
-Spring Boot Actuator exposes:
+Health endpoint:
 
 ```text
 /actuator/health
 ```
 
-Docker checks application health automatically. MySQL also has a readiness check, and the application waits until MySQL is healthy before starting.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment and rollback.
 
-### Production Compose
+## Full Backup & Disaster Recovery
 
-For server deployment using the published image:
+Production data is protected as two coordinated parts:
 
-```bash
-docker compose -f docker-compose.prod.yml pull app
-docker compose -f docker-compose.prod.yml up -d --build
+1. MySQL application data
+2. Uploaded PDFs/documents from `resource_uploads`
+
+The scheduled backup service creates synchronized backups and a combined recovery bundle:
+
+```text
+bba_bca_wallah_YYYY-MM-DD_HH-MM-SS.sql.gz
+uploads_YYYY-MM-DD_HH-MM-SS.tar.gz
+full_YYYY-MM-DD_HH-MM-SS.tar.gz
+manifest_YYYY-MM-DD_HH-MM-SS.txt
 ```
 
-Production Compose does not expose MySQL publicly and keeps database/uploads/backups in persistent Docker volumes.
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for deployment, update, logs and rollback instructions.
-
-## Database Backup & Restore
-
-Production includes a dedicated MySQL backup container.
-
-Default behavior:
+Default schedule:
 
 ```text
 BACKUP_INTERVAL_SECONDS=86400
@@ -165,21 +108,18 @@ BACKUP_RETENTION_DAYS=14
 BACKUP_ON_START=true
 ```
 
-This creates a compressed SQL backup every 24 hours, keeps 14 days of backups, and creates one backup when the backup service starts.
-
-Backups are stored in the persistent `db_backups` Docker volume.
-
-Manual backup:
+Manual full-site backup:
 
 ```bash
-docker compose -f docker-compose.prod.yml run --rm --entrypoint /scripts/backup-db.sh backup
+docker compose -f docker-compose.prod.yml run --rm \
+  --entrypoint /scripts/full-backup.sh backup
 ```
 
-Restore requires an explicit backup filename and `CONFIRM_RESTORE=YES` to reduce accidental destructive restores.
+Full restore is guarded by `CONFIRM_RESTORE=YES` and should be performed while the app and scheduled backup service are stopped.
 
-See [BACKUP_RESTORE.md](BACKUP_RESTORE.md) for full backup, restore, retention, and recovery instructions.
+See [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md) for full-site restore instructions. Database-only procedures remain documented in [BACKUP_RESTORE.md](BACKUP_RESTORE.md).
 
-Important: SQL backups protect MySQL data. Uploaded documents remain in the separate `resource_uploads` volume and should also be backed up for complete disaster recovery.
+Important production note: the `db_backups` Docker volume protects recovery data on the same server. For server/disk-loss protection, copy full backup bundles to independent off-server storage.
 
 ## Tech Stack
 
@@ -230,8 +170,8 @@ Open:
 
 ## Roadmap
 
+- Off-server backup synchronization
 - Cloud object storage
-- Full uploaded-file backup/export
 - Date-range analytics
 - Mobile/PWA improvements
 - Reverse-proxy HTTPS example
