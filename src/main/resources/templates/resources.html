@@ -1,6 +1,6 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Resources | BBA/BCA Wallah</title><link rel="stylesheet" href="/css/style.css"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Resources | BBA/BCA Wallah</title><meta name="description" content="Browse BBA and BCA syllabus, PYQs, notes, e-books and important questions for JUT students."><link rel="stylesheet" href="/css/style.css"></head>
 <body><div th:replace="~{fragments :: header}"></div>
 <section class="section"><h1>Academic Resources</h1>
 <form class="filters resource-filters" method="get" action="/resources">
@@ -20,7 +20,7 @@
 
 <div class="filter-summary"><strong th:text="${totalResults}"></strong><span> resource(s) found</span></div>
 
-<div class="cards"><article class="card" th:each="r : ${resources}"><div class="badge-row"><span class="badge small featured-badge" th:if="${r.featured}">FEATURED</span><span class="badge small" th:text="${r.type}"></span></div><h3 th:text="${r.title}"></h3><p><strong th:text="${r.course}"></strong> • Semester <span th:text="${r.semester}"></span></p><p th:if="${r.subject != null}" th:text="${'Subject: ' + r.subject.name}"></p><p th:text="${r.description}"></p><p class="download-meta" th:text="${r.downloadCount + ' downloads'}"></p><a class="btn primary" th:if="${r.fileUrl != null and !r.fileUrl.isBlank()}" th:href="@{'/resource/' + ${r.id} + '/download'}">Download / Open</a></article></div>
+<div class="cards"><article class="card" th:each="r : ${resources}"><div class="badge-row"><span class="badge small featured-badge" th:if="${r.featured}">FEATURED</span><span class="badge small" th:text="${r.type}"></span></div><h3><a class="detail-title-link" th:href="@{'/resource/' + ${r.id}}" th:text="${r.title}"></a></h3><p><strong th:text="${r.course}"></strong> • Semester <span th:text="${r.semester}"></span></p><p th:if="${r.subject != null}" th:text="${'Subject: ' + r.subject.name}"></p><p th:text="${r.description}"></p><p class="download-meta" th:text="${r.downloadCount + ' downloads'}"></p><div class="card-actions"><a class="btn secondary" th:href="@{'/resource/' + ${r.id}}">View Details</a><a class="btn primary" th:if="${r.fileUrl != null and !r.fileUrl.isBlank()}" th:href="@{'/resource/' + ${r.id} + '/download'}">Download / Open</a></div></article></div>
 
 <div class="empty-state" th:if="${#lists.isEmpty(resources)}"><h3>No resources found</h3><p>Try changing or clearing the filters.</p><a class="btn secondary" href="/resources">Clear Filters</a></div>
 
