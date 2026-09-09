@@ -68,7 +68,7 @@ SITE_URL=https://your-domain.example
 
 ## CI/CD & Deployment Readiness
 
-GitHub Actions validates Java 21 builds, H2-backed Spring Boot tests, local/production Compose files, the application image, the recovery image, and all backup/restore shell scripts.
+GitHub Actions validates Java 21 builds, H2-backed Spring Boot tests, local/production Compose files, the application image, the local recovery image, the remote-backup image, and all backup/restore/sync shell scripts.
 
 Production application image:
 
@@ -100,7 +100,7 @@ full_YYYY-MM-DD_HH-MM-SS.tar.gz
 manifest_YYYY-MM-DD_HH-MM-SS.txt
 ```
 
-Default schedule:
+Default local schedule:
 
 ```text
 BACKUP_INTERVAL_SECONDS=86400
@@ -119,7 +119,30 @@ Full restore is guarded by `CONFIRM_RESTORE=YES` and should be performed while t
 
 See [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md) for full-site restore instructions. Database-only procedures remain documented in [BACKUP_RESTORE.md](BACKUP_RESTORE.md).
 
-Important production note: the `db_backups` Docker volume protects recovery data on the same server. For server/disk-loss protection, copy full backup bundles to independent off-server storage.
+## Off-Server Backup Synchronization
+
+A separate opt-in `remote-backup` service copies local recovery artifacts to private S3-compatible object storage. This can be used with AWS S3, Cloudflare R2, Backblaze B2 S3 API, MinIO and similar providers.
+
+The Java application and MySQL service do not receive the object-storage credentials.
+
+Default remote-sync settings:
+
+```text
+S3_PREFIX=bba-bca-wallah
+REMOTE_SYNC_INTERVAL_SECONDS=3600
+REMOTE_SYNC_ON_START=true
+REMOTE_RETENTION_DAYS=30
+```
+
+Enable it after configuring a private bucket and credentials:
+
+```bash
+docker compose -f docker-compose.prod.yml --profile remote-backup up -d --build
+```
+
+Remote recovery bundles can be downloaded back into the local backup volume and then restored using the existing guarded full-restore flow.
+
+See [REMOTE_BACKUP.md](REMOTE_BACKUP.md) for setup, provider-neutral configuration, manual synchronization, remote download and security guidance.
 
 ## Tech Stack
 
@@ -135,26 +158,25 @@ Important production note: the `db_backups` Docker volume protects recovery data
 - Docker / Docker Compose
 - GitHub Actions
 - GitHub Container Registry
+- S3-compatible off-server backup storage
 - HTML + CSS
 
 ## Environment Setup
 
-Copy `.env.example` to `.env` and configure:
+Copy `.env.example` to `.env` and configure the application/database values first. To enable remote backups, also configure:
 
 ```text
-MYSQL_ROOT_PASSWORD
-ADMIN_USERNAME
-ADMIN_PASSWORD
-SITE_URL
-APP_PORT
-APP_IMAGE
-JAVA_OPTS
-BACKUP_INTERVAL_SECONDS
-BACKUP_RETENTION_DAYS
-BACKUP_ON_START
+S3_ENDPOINT
+S3_BUCKET
+S3_PREFIX
+S3_ACCESS_KEY
+S3_SECRET_KEY
+REMOTE_SYNC_INTERVAL_SECONDS
+REMOTE_SYNC_ON_START
+REMOTE_RETENTION_DAYS
 ```
 
-Do not commit the real `.env` file.
+Never commit the real `.env` file or storage credentials.
 
 ## Local Docker Run
 
@@ -170,8 +192,7 @@ Open:
 
 ## Roadmap
 
-- Off-server backup synchronization
-- Cloud object storage
+- Cloud object storage for primary resource files
 - Date-range analytics
 - Mobile/PWA improvements
 - Reverse-proxy HTTPS example
@@ -179,4 +200,4 @@ Open:
 
 ## Disclaimer
 
-This is an independent student project and is not the official website of Jharkhand University of Technology. Understand
+This is an independent student project and is not the official website of Jharkhand University of Technology.
