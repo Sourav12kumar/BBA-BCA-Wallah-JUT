@@ -1,0 +1,6 @@
+FROM minio/mc:latest
+
+COPY scripts /scripts
+RUN chmod +x /scripts/*.sh
+
+ENTRYPOINT ["/scripts/remote-sync-loop.sh"]
