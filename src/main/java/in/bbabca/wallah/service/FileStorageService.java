@@ -13,12 +13,13 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 
 import java.io.IOException;
 import java.net.URI;
@@ -78,7 +79,7 @@ public class FileStorageService {
                     .pathStyleAccessEnabled(pathStyle)
                     .build();
 
-            S3Client.Builder clientBuilder = S3Client.builder()
+            S3ClientBuilder clientBuilder = S3Client.builder()
                     .credentialsProvider(credentialsProvider)
                     .region(Region.of(region))
                     .serviceConfiguration(s3Configuration);
