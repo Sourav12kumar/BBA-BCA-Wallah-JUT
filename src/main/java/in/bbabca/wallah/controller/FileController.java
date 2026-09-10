@@ -8,6 +8,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.net.URI;
+
 @Controller
 public class FileController {
 
@@ -18,7 +20,12 @@ public class FileController {
     }
 
     @GetMapping("/files/{filename:.+}")
-    public ResponseEntity<Resource> download(@PathVariable String filename) {
+    public ResponseEntity<?> download(@PathVariable String filename) {
+        if (fileStorageService.isCloudStorage()) {
+            URI signedUrl = URI.create(fileStorageService.createSignedDownloadUrl(filename).toString());
+            return ResponseEntity.status(302).location(signedUrl).build();
+        }
+
         Resource resource = fileStorageService.load(filename);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
