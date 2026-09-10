@@ -20,15 +20,18 @@ public class PublicController {
     private final NoticeRepository noticeRepository;
     private final SubjectRepository subjectRepository;
     private final OpportunityRepository opportunityRepository;
+    private final DownloadEventRepository downloadEventRepository;
 
     public PublicController(AcademicResourceRepository resourceRepository,
                             NoticeRepository noticeRepository,
                             SubjectRepository subjectRepository,
-                            OpportunityRepository opportunityRepository) {
+                            OpportunityRepository opportunityRepository,
+                            DownloadEventRepository downloadEventRepository) {
         this.resourceRepository = resourceRepository;
         this.noticeRepository = noticeRepository;
         this.subjectRepository = subjectRepository;
         this.opportunityRepository = opportunityRepository;
+        this.downloadEventRepository = downloadEventRepository;
     }
 
     @GetMapping("/")
@@ -165,6 +168,7 @@ public class PublicController {
             return "redirect:/resources";
         }
         resourceRepository.incrementDownloadCount(id);
+        downloadEventRepository.save(new DownloadEvent(resource.getId(), resource.getTitle()));
         return "redirect:" + resource.getFileUrl();
     }
 
