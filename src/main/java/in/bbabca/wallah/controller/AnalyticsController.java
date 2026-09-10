@@ -56,6 +56,9 @@ public class AnalyticsController {
 
         model.addAttribute("selectedStart", selectedStart);
         model.addAttribute("selectedEnd", selectedEnd);
+        model.addAttribute("today", today);
+        model.addAttribute("sevenDayStart", today.minusDays(6));
+        model.addAttribute("thirtyDayStart", today.minusDays(29));
         model.addAttribute("rangeDownloads", rangeDownloads);
         model.addAttribute("todayDownloads", todayDownloads);
         model.addAttribute("sevenDayDownloads", sevenDayDownloads);
