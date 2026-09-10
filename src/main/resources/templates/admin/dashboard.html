@@ -1,7 +1,7 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin Dashboard</title><link rel="stylesheet" href="/css/style.css"></head>
-<body><div class="admin-topbar"><a class="brand" href="/">BBA/BCA Wallah Admin</a><form method="post" action="/admin/logout"><button class="btn secondary">Logout</button></form></div>
+<body><div class="admin-topbar"><a class="brand" href="/">BBA/BCA Wallah Admin</a><form method="post" th:action="@{/admin/logout}"><button class="btn secondary">Logout</button></form></div>
 <section class="section">
 <div class="stats">
 <div class="stat"><strong th:text="${subjectCount}"></strong><span>Subjects</span></div>
@@ -11,7 +11,7 @@
 <div class="stat"><strong th:text="${internshipCount}"></strong><span>Internships</span></div>
 <div class="stat"><strong th:text="${totalDownloads}"></strong><span>Total Downloads</span></div>
 </div>
-<div class="admin-actions"><a class="btn primary" href="/admin/subjects/new">+ Add Subject</a><a class="btn primary" href="/admin/resources/new">+ Add Resource</a><a class="btn primary" href="/admin/notices/new">+ Add Notice</a><a class="btn primary" href="/admin/opportunities/new">+ Add Placement / Internship</a></div>
+<div class="admin-actions"><a class="btn primary" href="/admin/subjects/new">+ Add Subject</a><a class="btn primary" href="/admin/resources/new">+ Add Resource</a><a class="btn primary" href="/admin/notices/new">+ Add Notice</a><a class="btn primary" href="/admin/opportunities/new">+ Add Placement / Internship</a><a class="btn secondary" href="/admin/analytics">Download Analytics</a></div>
 
 <h2>Manage Placements & Internships</h2>
 <div class="table-wrap"><table><thead><tr><th>Type</th><th>Company</th><th>Role</th><th>Courses</th><th>Deadline</th><th>Featured</th><th>Actions</th></tr></thead><tbody>
