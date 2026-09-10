@@ -49,8 +49,31 @@ Subject Dashboard
 - Add/edit/delete subjects, notices and academic resources
 - Direct document uploads plus external URL support
 - Featured resources and pinned notices
-- Download analytics
+- Lifetime download analytics
+- Date-range download analytics
 - Placement/internship opportunity management
+
+## Download Analytics
+
+Every tracked resource download now records a lightweight timestamped download event while preserving the existing lifetime counter.
+
+Admin analytics page:
+
+```text
+/admin/analytics
+```
+
+It provides:
+
+- downloads today
+- downloads in the last 7 days
+- downloads in the last 30 days
+- custom start/end date reporting
+- selected-range total
+- lifetime total
+- top 10 downloaded resources in the selected date range
+
+Date-range analytics starts recording history from the deployment of this feature onward; existing lifetime download counts are not rewritten or guessed.
 
 ## SEO & Shareable Pages
 
@@ -68,7 +91,7 @@ SITE_URL=https://your-domain.example
 
 ## CI/CD & Deployment Readiness
 
-GitHub Actions validates Java 21 builds, H2-backed Spring Boot tests, local/production Compose files, the application image, the local recovery image, the remote-backup image, and all backup/restore/sync shell scripts.
+GitHub Actions validates Java 21 builds, H2-backed Spring Boot tests, local/production Compose files, the application image, the local recovery image, the remote-backup image, and backup/restore/sync shell scripts.
 
 Production application image:
 
@@ -91,14 +114,7 @@ Production data is protected as two coordinated parts:
 1. MySQL application data
 2. Uploaded PDFs/documents from `resource_uploads`
 
-The scheduled backup service creates synchronized backups and a combined recovery bundle:
-
-```text
-bba_bca_wallah_YYYY-MM-DD_HH-MM-SS.sql.gz
-uploads_YYYY-MM-DD_HH-MM-SS.tar.gz
-full_YYYY-MM-DD_HH-MM-SS.tar.gz
-manifest_YYYY-MM-DD_HH-MM-SS.txt
-```
+The scheduled backup service creates synchronized backups and a combined recovery bundle.
 
 Default local schedule:
 
@@ -108,41 +124,7 @@ BACKUP_RETENTION_DAYS=14
 BACKUP_ON_START=true
 ```
 
-Manual full-site backup:
-
-```bash
-docker compose -f docker-compose.prod.yml run --rm \
-  --entrypoint /scripts/full-backup.sh backup
-```
-
-Full restore is guarded by `CONFIRM_RESTORE=YES` and should be performed while the app and scheduled backup service are stopped.
-
-See [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md) for full-site restore instructions. Database-only procedures remain documented in [BACKUP_RESTORE.md](BACKUP_RESTORE.md).
-
-## Off-Server Backup Synchronization
-
-A separate opt-in `remote-backup` service copies local recovery artifacts to private S3-compatible object storage. This can be used with AWS S3, Cloudflare R2, Backblaze B2 S3 API, MinIO and similar providers.
-
-The Java application and MySQL service do not receive the object-storage credentials.
-
-Default remote-sync settings:
-
-```text
-S3_PREFIX=bba-bca-wallah
-REMOTE_SYNC_INTERVAL_SECONDS=3600
-REMOTE_SYNC_ON_START=true
-REMOTE_RETENTION_DAYS=30
-```
-
-Enable it after configuring a private bucket and credentials:
-
-```bash
-docker compose -f docker-compose.prod.yml --profile remote-backup up -d --build
-```
-
-Remote recovery bundles can be downloaded back into the local backup volume and then restored using the existing guarded full-restore flow.
-
-See [REMOTE_BACKUP.md](REMOTE_BACKUP.md) for setup, provider-neutral configuration, manual synchronization, remote download and security guidance.
+See [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md), [BACKUP_RESTORE.md](BACKUP_RESTORE.md), and [REMOTE_BACKUP.md](REMOTE_BACKUP.md) for recovery and off-server backup procedures.
 
 ## Tech Stack
 
@@ -163,20 +145,7 @@ See [REMOTE_BACKUP.md](REMOTE_BACKUP.md) for setup, provider-neutral configurati
 
 ## Environment Setup
 
-Copy `.env.example` to `.env` and configure the application/database values first. To enable remote backups, also configure:
-
-```text
-S3_ENDPOINT
-S3_BUCKET
-S3_PREFIX
-S3_ACCESS_KEY
-S3_SECRET_KEY
-REMOTE_SYNC_INTERVAL_SECONDS
-REMOTE_SYNC_ON_START
-REMOTE_RETENTION_DAYS
-```
-
-Never commit the real `.env` file or storage credentials.
+Copy `.env.example` to `.env` and configure the required application/database values. Never commit the real `.env` file or storage credentials.
 
 ## Local Docker Run
 
@@ -188,15 +157,20 @@ Open:
 
 - Student website: http://localhost:8080
 - Admin panel: http://localhost:8080/admin
+- Download analytics: http://localhost:8080/admin/analytics
 - Health: http://localhost:8080/actuator/health
+
+## Project Status
+
+See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the current completion report, completed modules, remaining work and recommended release sequence.
 
 ## Roadmap
 
 - Cloud object storage for primary resource files
-- Date-range analytics
 - Mobile/PWA improvements
-- Reverse-proxy HTTPS example
+- Reverse-proxy HTTPS production example
 - Contribution/contact workflow
+- Final end-to-end production smoke test and release hardening
 
 ## Disclaimer
 
