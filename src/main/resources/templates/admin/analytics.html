@@ -1,0 +1,61 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Analytics | BBA/BCA Wallah Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="admin-topbar">
+    <a class="brand" href="/admin">BBA/BCA Wallah Admin</a>
+    <a class="btn secondary" href="/admin">← Dashboard</a>
+</div>
+
+<section class="section">
+    <div class="section-heading-row">
+        <div>
+            <span class="badge small">ANALYTICS</span>
+            <h1>Download Analytics</h1>
+            <p>Track resource usage by date range. New events are recorded from this feature onward; lifetime counters remain unchanged.</p>
+        </div>
+    </div>
+
+    <form class="filters" method="get" action="/admin/analytics">
+        <input type="date" name="start" th:value="${selectedStart}">
+        <input type="date" name="end" th:value="${selectedEnd}">
+        <button class="btn primary" type="submit">Apply Range</button>
+        <a class="btn secondary" th:href="@{/admin/analytics(start=${#temporals.format(#temporals.createToday().minusDays(6),'yyyy-MM-dd')},end=${#temporals.format(#temporals.createToday(),'yyyy-MM-dd')})}">Last 7 Days</a>
+        <a class="btn secondary" th:href="@{/admin/analytics(start=${#temporals.format(#temporals.createToday().minusDays(29),'yyyy-MM-dd')},end=${#temporals.format(#temporals.createToday(),'yyyy-MM-dd')})}">Last 30 Days</a>
+    </form>
+
+    <div class="stats">
+        <div class="stat"><strong th:text="${todayDownloads}"></strong><span>Today</span></div>
+        <div class="stat"><strong th:text="${sevenDayDownloads}"></strong><span>Last 7 Days</span></div>
+        <div class="stat"><strong th:text="${thirtyDayDownloads}"></strong><span>Last 30 Days</span></div>
+        <div class="stat"><strong th:text="${rangeDownloads}"></strong><span>Selected Range</span></div>
+        <div class="stat"><strong th:text="${lifetimeDownloads}"></strong><span>Lifetime Downloads</span></div>
+    </div>
+
+    <h2 th:text="${'Top Resources: ' + selectedStart + ' to ' + selectedEnd}"></h2>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Rank</th><th>Resource</th><th>Downloads</th><th>Details</th></tr></thead>
+            <tbody>
+            <tr th:each="s,iter : ${topResources}">
+                <td th:text="${iter.count}"></td>
+                <td th:text="${s.resourceTitle}"></td>
+                <td><strong th:text="${s.downloadCount}"></strong></td>
+                <td><a class="text-link" th:href="@{'/resource/' + ${s.resourceId}}">View →</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(topResources)}">
+        <h3>No downloads in this range</h3>
+        <p>Choose another date range or wait for new student downloads to be recorded.</p>
+    </div>
+</section>
+</body>
+</html>
