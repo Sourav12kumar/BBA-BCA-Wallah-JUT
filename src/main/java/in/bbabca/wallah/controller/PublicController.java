@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -164,12 +165,13 @@ public class PublicController {
     @GetMapping("/resource/{id}/download")
     public String downloadResource(@PathVariable Long id) {
         AcademicResource resource = resourceRepository.findById(id).orElseThrow();
-        if (!resource.isActive() || resource.getFileUrl() == null || resource.getFileUrl().isBlank()) {
+        String target = resource.getFileUrl();
+        if (!resource.isActive() || !isSafeResourceTarget(target)) {
             return "redirect:/resources";
         }
         resourceRepository.incrementDownloadCount(id);
         downloadEventRepository.save(new DownloadEvent(resource.getId(), resource.getTitle()));
-        return "redirect:" + resource.getFileUrl();
+        return "redirect:" + target;
     }
 
     @GetMapping("/subjects")
@@ -248,6 +250,21 @@ public class PublicController {
 
     @GetMapping("/about")
     public String about() { return "about"; }
+
+    private static boolean isSafeResourceTarget(String target) {
+        if (target == null || target.isBlank()) return false;
+        if (target.startsWith("/files/")) return true;
+        try {
+            URI uri = URI.create(target);
+            String scheme = uri.getScheme();
+            return uri.isAbsolute()
+                    && ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))
+                    && uri.getHost() != null
+                    && uri.getUserInfo() == null;
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
+    }
 
     private static boolean contains(String value, String needle) {
         return value != null && value.toLowerCase(Locale.ROOT).contains(needle);
