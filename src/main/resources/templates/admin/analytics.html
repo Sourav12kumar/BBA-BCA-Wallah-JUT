@@ -25,8 +25,8 @@
         <input type="date" name="start" th:value="${selectedStart}">
         <input type="date" name="end" th:value="${selectedEnd}">
         <button class="btn primary" type="submit">Apply Range</button>
-        <a class="btn secondary" th:href="@{/admin/analytics(start=${#temporals.format(#temporals.createToday().minusDays(6),'yyyy-MM-dd')},end=${#temporals.format(#temporals.createToday(),'yyyy-MM-dd')})}">Last 7 Days</a>
-        <a class="btn secondary" th:href="@{/admin/analytics(start=${#temporals.format(#temporals.createToday().minusDays(29),'yyyy-MM-dd')},end=${#temporals.format(#temporals.createToday(),'yyyy-MM-dd')})}">Last 30 Days</a>
+        <a class="btn secondary" th:href="@{/admin/analytics(start=${sevenDayStart},end=${today})}">Last 7 Days</a>
+        <a class="btn secondary" th:href="@{/admin/analytics(start=${thirtyDayStart},end=${today})}">Last 30 Days</a>
     </form>
 
     <div class="stats">
