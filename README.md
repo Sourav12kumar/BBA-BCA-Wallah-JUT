@@ -52,10 +52,26 @@ Subject Dashboard
 - Lifetime download analytics
 - Date-range download analytics
 - Placement/internship opportunity management
+- Resource course/semester automatically derived from the selected subject
+
+## Primary Resource Storage
+
+Admin uploads support two storage modes:
+
+```text
+STORAGE_PROVIDER=local
+STORAGE_PROVIDER=s3
+```
+
+With `s3`, uploaded files are stored in a private S3-compatible object bucket. Existing `/files/{uuid.ext}` URLs remain unchanged; when a student downloads a cloud-backed file, the application issues a short-lived presigned object URL.
+
+Supported provider styles include AWS S3 and compatible services such as Cloudflare R2, Backblaze B2 S3 API and MinIO.
+
+See [OBJECT_STORAGE.md](OBJECT_STORAGE.md) for configuration, permissions, migration and security guidance.
 
 ## Download Analytics
 
-Every tracked resource download now records a lightweight timestamped download event while preserving the existing lifetime counter.
+Every tracked resource download records a lightweight timestamped download event while preserving the existing lifetime counter.
 
 Admin analytics page:
 
@@ -63,17 +79,7 @@ Admin analytics page:
 /admin/analytics
 ```
 
-It provides:
-
-- downloads today
-- downloads in the last 7 days
-- downloads in the last 30 days
-- custom start/end date reporting
-- selected-range total
-- lifetime total
-- top 10 downloaded resources in the selected date range
-
-Date-range analytics starts recording history from the deployment of this feature onward; existing lifetime download counts are not rewritten or guessed.
+It provides downloads today, last 7 days, last 30 days, custom date ranges, lifetime totals and top resources for the selected period.
 
 ## SEO & Shareable Pages
 
@@ -91,7 +97,7 @@ SITE_URL=https://your-domain.example
 
 ## CI/CD & Deployment Readiness
 
-GitHub Actions validates Java 21 builds, H2-backed Spring Boot tests, local/production Compose files, the application image, the local recovery image, the remote-backup image, and backup/restore/sync shell scripts.
+GitHub Actions validates Java 21 builds, H2-backed Spring Boot tests, local/production Compose files, the application image, recovery images and backup/restore scripts.
 
 Production application image:
 
@@ -107,24 +113,11 @@ Health endpoint:
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment and rollback.
 
-## Full Backup & Disaster Recovery
+## Backup & Disaster Recovery
 
-Production data is protected as two coordinated parts:
+The project includes scheduled local backups, full-site recovery bundles and optional S3-compatible off-server backup synchronization.
 
-1. MySQL application data
-2. Uploaded PDFs/documents from `resource_uploads`
-
-The scheduled backup service creates synchronized backups and a combined recovery bundle.
-
-Default local schedule:
-
-```text
-BACKUP_INTERVAL_SECONDS=86400
-BACKUP_RETENTION_DAYS=14
-BACKUP_ON_START=true
-```
-
-See [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md), [BACKUP_RESTORE.md](BACKUP_RESTORE.md), and [REMOTE_BACKUP.md](REMOTE_BACKUP.md) for recovery and off-server backup procedures.
+See [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md), [BACKUP_RESTORE.md](BACKUP_RESTORE.md), and [REMOTE_BACKUP.md](REMOTE_BACKUP.md).
 
 ## Tech Stack
 
@@ -137,10 +130,11 @@ See [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md), [BACKUP_RESTORE.md](BACKUP_RES
 - Spring Boot Actuator
 - MySQL
 - H2 for isolated CI tests
+- AWS SDK v2 S3 client/presigner
 - Docker / Docker Compose
 - GitHub Actions
 - GitHub Container Registry
-- S3-compatible off-server backup storage
+- S3-compatible object storage and backup storage
 - HTML + CSS
 
 ## Environment Setup
@@ -166,11 +160,11 @@ See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the current completion report, co
 
 ## Roadmap
 
-- Cloud object storage for primary resource files
 - Mobile/PWA improvements
 - Reverse-proxy HTTPS production example
 - Contribution/contact workflow
 - Final end-to-end production smoke test and release hardening
+- Optional migration utility for existing local files to object storage
 
 ## Disclaimer
 
