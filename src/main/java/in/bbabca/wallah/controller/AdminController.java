@@ -120,6 +120,16 @@ public class AdminController {
                 existing = resourceRepository.findById(resource.getId()).orElse(null);
             }
 
+            if (resource.getSubject() == null || resource.getSubject().getId() == null) {
+                throw new IllegalArgumentException("Please select a valid subject.");
+            }
+
+            Subject selectedSubject = subjectRepository.findById(resource.getSubject().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Selected subject does not exist."));
+            resource.setSubject(selectedSubject);
+            resource.setCourse(selectedSubject.getCourse());
+            resource.setSemester(selectedSubject.getSemester());
+
             String previousUrl = existing != null ? existing.getFileUrl() : null;
             if (existing != null) {
                 resource.setDownloadCount(existing.getDownloadCount());
