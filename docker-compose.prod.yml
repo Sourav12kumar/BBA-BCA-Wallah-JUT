@@ -39,8 +39,8 @@ services:
       STORAGE_S3_KEY_PREFIX: ${STORAGE_S3_KEY_PREFIX:-resources}
       STORAGE_S3_PRESIGN_MINUTES: ${STORAGE_S3_PRESIGN_MINUTES:-15}
       JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError}
-    ports:
-      - "${APP_PORT:-8080}:8080"
+    expose:
+      - "8080"
     volumes:
       - resource_uploads:/app/uploads
     healthcheck:
@@ -49,6 +49,25 @@ services:
       timeout: 5s
       retries: 3
       start_period: 40s
+    restart: unless-stopped
+    networks:
+      - app_network
+
+  caddy:
+    image: caddy:2.9-alpine
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     restart: unless-stopped
     networks:
       - app_network
@@ -104,6 +123,8 @@ volumes:
   mysql_data:
   resource_uploads:
   db_backups:
+  caddy_data:
+  caddy_config:
 
 networks:
   app_network:
