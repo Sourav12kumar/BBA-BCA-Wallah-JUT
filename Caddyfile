@@ -1,0 +1,18 @@
+{$SITE_DOMAIN} {
+    encode zstd gzip
+
+    @health path /actuator/health
+    handle @health {
+        reverse_proxy app:8080
+    }
+
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        X-Frame-Options SAMEORIGIN
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    }
+
+    reverse_proxy app:8080
+}
