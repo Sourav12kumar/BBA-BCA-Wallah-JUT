@@ -46,13 +46,33 @@ Subject Dashboard
 ## Admin Features
 
 - Protected admin login
-- Add/edit/delete subjects, notices and academic resources
+- Add/edit/manage subjects, notices and academic resources
 - Direct document uploads plus external URL support
 - Featured resources and pinned notices
 - Lifetime download analytics
 - Date-range download analytics
 - Placement/internship opportunity management
 - Resource course/semester automatically derived from the selected subject
+- Subject delete actions are implemented as safe soft-disable operations
+
+## Database Migrations
+
+Production schema changes are managed with **Flyway**.
+
+```text
+spring.jpa.hibernate.ddl-auto=validate
+spring.flyway.enabled=true
+```
+
+Fresh databases execute:
+
+```text
+src/main/resources/db/migration/V1__initial_schema.sql
+```
+
+Existing non-empty databases are baselined at version 1 so Flyway can take over migration history without recreating current application data. Future schema changes should be added as new versioned migration files rather than editing an already-applied migration.
+
+See [DATABASE_MIGRATIONS.md](DATABASE_MIGRATIONS.md).
 
 ## Primary Resource Storage
 
@@ -79,17 +99,9 @@ Internet -> Caddy :80/:443 -> Spring Boot :8080 (private) -> MySQL
 
 The production Compose file exposes only ports 80/443 through Caddy; the Spring Boot application is no longer published directly to the host.
 
-Caddy provides:
+Caddy provides automatic HTTPS, HTTP-to-HTTPS redirect, compression, HSTS, browser security headers and reverse proxying to the private application service.
 
-- automatic HTTPS certificate issuance and renewal
-- HTTP → HTTPS redirect
-- gzip/zstd compression
-- HSTS and additional browser security headers
-- reverse proxying to the private application service
-
-Spring Boot uses forwarded-header support so it recognizes the original HTTPS scheme and hostname behind Caddy.
-
-See [HTTPS_DEPLOYMENT.md](HTTPS_DEPLOYMENT.md) for DNS, firewall, domain and verification steps.
+See [HTTPS_DEPLOYMENT.md](HTTPS_DEPLOYMENT.md).
 
 ## Download Analytics
 
@@ -146,6 +158,7 @@ See [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md), [BACKUP_RESTORE.md](BACKUP_RES
 - Spring Data JPA
 - Spring Security
 - Spring Boot Actuator
+- Flyway
 - MySQL
 - H2 for isolated CI tests
 - AWS SDK v2 S3 client/presigner
@@ -186,7 +199,6 @@ See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the current completion report, co
 
 ## Roadmap
 
-- Database migration tooling and subject-delete safety
 - Upload content validation and raw-file access hardening
 - Mobile/PWA improvements
 - Contribution/contact workflow
