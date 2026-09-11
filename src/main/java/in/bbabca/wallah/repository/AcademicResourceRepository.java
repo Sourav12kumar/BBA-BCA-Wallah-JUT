@@ -18,6 +18,7 @@ public interface AcademicResourceRepository extends JpaRepository<AcademicResour
     List<AcademicResource> findByTitleContainingIgnoreCaseAndActiveTrueOrderByFeaturedDescCreatedAtDesc(String keyword);
     List<AcademicResource> findTop6ByFeaturedTrueAndActiveTrueOrderByCreatedAtDesc();
     List<AcademicResource> findTop6ByActiveTrueAndFileUrlIsNotNullOrderByDownloadCountDescCreatedAtDesc();
+    long countBySubjectId(Long subjectId);
 
     @Modifying
     @Transactional
