@@ -69,6 +69,28 @@ Supported provider styles include AWS S3 and compatible services such as Cloudfl
 
 See [OBJECT_STORAGE.md](OBJECT_STORAGE.md) for configuration, permissions, migration and security guidance.
 
+## HTTPS Reverse Proxy
+
+Production traffic is routed through **Caddy**:
+
+```text
+Internet -> Caddy :80/:443 -> Spring Boot :8080 (private) -> MySQL
+```
+
+The production Compose file exposes only ports 80/443 through Caddy; the Spring Boot application is no longer published directly to the host.
+
+Caddy provides:
+
+- automatic HTTPS certificate issuance and renewal
+- HTTP → HTTPS redirect
+- gzip/zstd compression
+- HSTS and additional browser security headers
+- reverse proxying to the private application service
+
+Spring Boot uses forwarded-header support so it recognizes the original HTTPS scheme and hostname behind Caddy.
+
+See [HTTPS_DEPLOYMENT.md](HTTPS_DEPLOYMENT.md) for DNS, firewall, domain and verification steps.
+
 ## Download Analytics
 
 Every tracked resource download records a lightweight timestamped download event while preserving the existing lifetime counter.
@@ -89,11 +111,7 @@ Career opportunities: `/opportunity/{id}`
 
 Dynamic sitemap: `/sitemap.xml`
 
-Configure production canonical URLs with:
-
-```text
-SITE_URL=https://your-domain.example
-```
+Configure production canonical URLs with `SITE_URL`.
 
 ## CI/CD & Deployment Readiness
 
@@ -132,6 +150,7 @@ See [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md), [BACKUP_RESTORE.md](BACKUP_RES
 - H2 for isolated CI tests
 - AWS SDK v2 S3 client/presigner
 - Docker / Docker Compose
+- Caddy reverse proxy + automatic HTTPS
 - GitHub Actions
 - GitHub Container Registry
 - S3-compatible object storage and backup storage
@@ -140,6 +159,13 @@ See [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md), [BACKUP_RESTORE.md](BACKUP_RES
 ## Environment Setup
 
 Copy `.env.example` to `.env` and configure the required application/database values. Never commit the real `.env` file or storage credentials.
+
+For production HTTPS, configure both:
+
+```text
+SITE_DOMAIN
+SITE_URL
+```
 
 ## Local Docker Run
 
@@ -160,8 +186,9 @@ See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the current completion report, co
 
 ## Roadmap
 
+- Database migration tooling and subject-delete safety
+- Upload content validation and raw-file access hardening
 - Mobile/PWA improvements
-- Reverse-proxy HTTPS production example
 - Contribution/contact workflow
 - Final end-to-end production smoke test and release hardening
 - Optional migration utility for existing local files to object storage
