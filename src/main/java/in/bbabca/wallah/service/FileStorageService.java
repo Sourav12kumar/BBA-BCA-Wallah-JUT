@@ -22,6 +22,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
@@ -39,6 +40,8 @@ public class FileStorageService {
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
             "pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "txt"
     );
+
+    private static final int SIGNATURE_READ_LIMIT = 8192;
 
     private final Path uploadDirectory;
     private final String provider;
@@ -146,6 +149,7 @@ public class FileStorageService {
     }
 
     public Resource load(String filename) {
+        validateStoredFilename(filename);
         if (isCloudStorage()) {
             throw new IllegalStateException("Cloud files must be accessed through a signed URL.");
         }
@@ -167,6 +171,7 @@ public class FileStorageService {
     }
 
     public URL createSignedDownloadUrl(String filename) {
+        validateStoredFilename(filename);
         if (!isCloudStorage()) {
             throw new IllegalStateException("Signed URLs are only available for cloud storage.");
         }
@@ -198,7 +203,7 @@ public class FileStorageService {
         }
 
         String filename = publicUrl.substring("/files/".length());
-        if (filename.isBlank() || filename.contains("/") || filename.contains("\\") || filename.contains("..")) {
+        if (!isStoredFilenameSafe(filename)) {
             return;
         }
 
@@ -243,6 +248,75 @@ public class FileStorageService {
                     "Unsupported file type. Allowed: PDF, Word, PowerPoint, Excel and TXT."
             );
         }
+
+        try {
+            byte[] header = readHeader(file);
+            if (!matchesExpectedSignature(extension, header)) {
+                throw new IllegalArgumentException(
+                        "File content does not match the selected file type. Please upload a valid document."
+                );
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not inspect uploaded file.", e);
+        }
+    }
+
+    private byte[] readHeader(MultipartFile file) throws IOException {
+        try (InputStream input = file.getInputStream()) {
+            return input.readNBytes(SIGNATURE_READ_LIMIT);
+        }
+    }
+
+    private boolean matchesExpectedSignature(String extension, byte[] bytes) {
+        return switch (extension) {
+            case "pdf" -> startsWith(bytes, new int[]{0x25, 0x50, 0x44, 0x46, 0x2D}); // %PDF-
+            case "docx", "pptx", "xlsx" -> isZip(bytes);
+            case "doc", "ppt", "xls" -> startsWith(bytes,
+                    new int[]{0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1});
+            case "txt" -> looksLikeText(bytes);
+            default -> false;
+        };
+    }
+
+    private boolean isZip(byte[] bytes) {
+        return startsWith(bytes, new int[]{0x50, 0x4B, 0x03, 0x04})
+                || startsWith(bytes, new int[]{0x50, 0x4B, 0x05, 0x06})
+                || startsWith(bytes, new int[]{0x50, 0x4B, 0x07, 0x08});
+    }
+
+    private boolean looksLikeText(byte[] bytes) {
+        if (bytes.length == 0) return true;
+        int suspicious = 0;
+        for (byte value : bytes) {
+            int b = value & 0xFF;
+            if (b == 0) return false;
+            if (b < 0x20 && b != '\n' && b != '\r' && b != '\t' && b != '\f') {
+                suspicious++;
+            }
+        }
+        return suspicious <= Math.max(1, bytes.length / 50);
+    }
+
+    private boolean startsWith(byte[] bytes, int[] signature) {
+        if (bytes.length < signature.length) return false;
+        for (int i = 0; i < signature.length; i++) {
+            if ((bytes[i] & 0xFF) != signature[i]) return false;
+        }
+        return true;
+    }
+
+    private void validateStoredFilename(String filename) {
+        if (!isStoredFilenameSafe(filename)) {
+            throw new IllegalArgumentException("Invalid file path.");
+        }
+    }
+
+    private boolean isStoredFilenameSafe(String filename) {
+        return filename != null
+                && !filename.isBlank()
+                && !filename.contains("/")
+                && !filename.contains("\\")
+                && !filename.contains("..");
     }
 
     private String objectKey(String filename) {
