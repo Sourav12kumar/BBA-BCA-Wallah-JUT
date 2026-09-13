@@ -40,7 +40,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/subjects", "/subject/**", "/resources", "/notices", "/about",
                         "/placements", "/internships", "/opportunities", "/opportunity/**",
-                        "/resource/**", "/sitemap.xml", "/files/**", "/css/**", "/actuator/health", "/error").permitAll()
+                        "/resource/**", "/sitemap.xml", "/css/**", "/actuator/health", "/error").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().permitAll()
             )
