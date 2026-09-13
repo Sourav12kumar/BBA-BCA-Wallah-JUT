@@ -2,6 +2,10 @@ package in.bbabca.wallah.controller;
 
 import in.bbabca.wallah.model.*;
 import in.bbabca.wallah.repository.*;
+import in.bbabca.wallah.service.FileStorageService;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,17 +26,20 @@ public class PublicController {
     private final SubjectRepository subjectRepository;
     private final OpportunityRepository opportunityRepository;
     private final DownloadEventRepository downloadEventRepository;
+    private final FileStorageService fileStorageService;
 
     public PublicController(AcademicResourceRepository resourceRepository,
                             NoticeRepository noticeRepository,
                             SubjectRepository subjectRepository,
                             OpportunityRepository opportunityRepository,
-                            DownloadEventRepository downloadEventRepository) {
+                            DownloadEventRepository downloadEventRepository,
+                            FileStorageService fileStorageService) {
         this.resourceRepository = resourceRepository;
         this.noticeRepository = noticeRepository;
         this.subjectRepository = subjectRepository;
         this.opportunityRepository = opportunityRepository;
         this.downloadEventRepository = downloadEventRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping("/")
@@ -163,15 +170,31 @@ public class PublicController {
     }
 
     @GetMapping("/resource/{id}/download")
-    public String downloadResource(@PathVariable Long id) {
-        AcademicResource resource = resourceRepository.findById(id).orElseThrow();
-        String target = resource.getFileUrl();
-        if (!resource.isActive() || !isSafeResourceTarget(target)) {
-            return "redirect:/resources";
+    public ResponseEntity<?> downloadResource(@PathVariable Long id) {
+        AcademicResource academicResource = resourceRepository.findById(id).orElseThrow();
+        String target = academicResource.getFileUrl();
+        if (!academicResource.isActive() || !isSafeResourceTarget(target)) {
+            return ResponseEntity.status(302).location(URI.create("/resources")).build();
         }
+
         resourceRepository.incrementDownloadCount(id);
-        downloadEventRepository.save(new DownloadEvent(resource.getId(), resource.getTitle()));
-        return "redirect:" + target;
+        downloadEventRepository.save(new DownloadEvent(academicResource.getId(), academicResource.getTitle()));
+
+        if (target.startsWith("/files/")) {
+            String filename = target.substring("/files/".length());
+            if (fileStorageService.isCloudStorage()) {
+                URI signedUrl = URI.create(fileStorageService.createSignedDownloadUrl(filename).toString());
+                return ResponseEntity.status(302).location(signedUrl).build();
+            }
+
+            Resource storedFile = fileStorageService.load(filename);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + storedFile.getFilename() + "\"")
+                    .body(storedFile);
+        }
+
+        return ResponseEntity.status(302).location(URI.create(target)).build();
     }
 
     @GetMapping("/subjects")
@@ -253,7 +276,13 @@ public class PublicController {
 
     private static boolean isSafeResourceTarget(String target) {
         if (target == null || target.isBlank()) return false;
-        if (target.startsWith("/files/")) return true;
+        if (target.startsWith("/files/")) {
+            String filename = target.substring("/files/".length());
+            return !filename.isBlank()
+                    && !filename.contains("/")
+                    && !filename.contains("\\")
+                    && !filename.contains("..");
+        }
         try {
             URI uri = URI.create(target);
             String scheme = uri.getScheme();
